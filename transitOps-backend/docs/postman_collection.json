@@ -1,0 +1,338 @@
+{
+  "info": {
+    "_postman_id": "49320e8b-a7e8-4228-8d48-35ed06740b48",
+    "name": "TransitOps API v1.1",
+    "description": "TransitOps Backend API Collection. All responses use unified wrapper: {success, message, data}. List endpoints are paginated: {success, message, data[], page, page_size, total, total_pages}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/x-www-form-urlencoded"}],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "username", "value": "admin@transitops.com", "type": "text"},
+                {"key": "password", "value": "Password123", "type": "text"}
+              ]
+            },
+            "url": {"raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"]}
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"full_name\": \"John Doe\", \"email\": \"john@transitops.com\", \"password\": \"Password123\", \"role\": \"DRIVER\"}"
+            },
+            "url": {"raw": "{{base_url}}/api/v1/auth/register", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "register"]}
+          }
+        },
+        {
+          "name": "Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/auth/me", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "me"]}
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"refresh_token\": \"{{refresh_token}}\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/auth/refresh", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "refresh"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/users?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "users"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/users/1", "host": ["{{base_url}}"], "path": ["api", "v1", "users", "1"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "List Vehicles (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/vehicles?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "vehicles"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "List Available Vehicles (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/vehicles/available?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "vehicles", "available"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Get Vehicle",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/vehicles/1", "host": ["{{base_url}}"], "path": ["api", "v1", "vehicles", "1"]}
+          }
+        },
+        {
+          "name": "Create Vehicle",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"registration_number\": \"KBC-001A\", \"vehicle_name\": \"Toyota Land Cruiser\", \"vehicle_type\": \"SUV\", \"max_load_capacity\": 1000, \"fuel_type\": \"Diesel\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/vehicles", "host": ["{{base_url}}"], "path": ["api", "v1", "vehicles"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dispatchers",
+      "item": [
+        {
+          "name": "List Dispatchers (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/drivers?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "drivers"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "List Available Dispatchers (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/drivers/available?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "drivers", "available"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Create Dispatcher",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"full_name\": \"James Mwangi\", \"license_number\": \"DL-2024-001\", \"license_expiry\": \"2027-12-31\", \"phone\": \"+254700000001\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/drivers", "host": ["{{base_url}}"], "path": ["api", "v1", "drivers"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trips",
+      "item": [
+        {
+          "name": "List Trips (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/trips?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "trips"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"vehicle_id\": 1, \"driver_id\": 1, \"origin\": \"Nairobi\", \"destination\": \"Mombasa\", \"cargo_weight\": 500, \"planned_distance_km\": 480}"},
+            "url": {"raw": "{{base_url}}/api/v1/trips", "host": ["{{base_url}}"], "path": ["api", "v1", "trips"]}
+          }
+        },
+        {
+          "name": "Dispatch Trip",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"start_odometer\": 50000}"},
+            "url": {"raw": "{{base_url}}/api/v1/trips/1/dispatch", "host": ["{{base_url}}"], "path": ["api", "v1", "trips", "1", "dispatch"]}
+          }
+        },
+        {
+          "name": "Complete Trip",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"end_odometer\": 50480, \"fuel_consumed\": 45, \"actual_distance_km\": 480}"},
+            "url": {"raw": "{{base_url}}/api/v1/trips/1/complete", "host": ["{{base_url}}"], "path": ["api", "v1", "trips", "1", "complete"]}
+          }
+        },
+        {
+          "name": "Cancel Trip",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/trips/1/cancel", "host": ["{{base_url}}"], "path": ["api", "v1", "trips", "1", "cancel"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maintenance",
+      "item": [
+        {
+          "name": "List Maintenance (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/maintenance?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "maintenance"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Create Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"vehicle_id\": 1, \"title\": \"Oil Change\", \"description\": \"Full synthetic oil change\", \"cost\": 3500, \"start_date\": \"2026-07-12\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/maintenance", "host": ["{{base_url}}"], "path": ["api", "v1", "maintenance"]}
+          }
+        },
+        {
+          "name": "Close Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/maintenance/1/close", "host": ["{{base_url}}"], "path": ["api", "v1", "maintenance", "1", "close"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fuel Logs",
+      "item": [
+        {
+          "name": "List Fuel Logs (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/fuel?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "fuel"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Create Fuel Log",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"vehicle_id\": 1, \"liters\": 45.5, \"cost\": 7280, \"date\": \"2026-07-12\", \"station\": \"Shell Westlands\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/fuel", "host": ["{{base_url}}"], "path": ["api", "v1", "fuel"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "List Expenses (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/expenses?skip=0&limit=20", "host": ["{{base_url}}"], "path": ["api", "v1", "expenses"], "query": [{"key": "skip", "value": "0"}, {"key": "limit", "value": "20"}]}
+          }
+        },
+        {
+          "name": "Create Expense",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}, {"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"vehicle_id\": 1, \"category\": \"Toll\", \"amount\": 250, \"date\": \"2026-07-12\", \"remarks\": \"Nairobi-Mombasa highway\"}"},
+            "url": {"raw": "{{base_url}}/api/v1/expenses", "host": ["{{base_url}}"], "path": ["api", "v1", "expenses"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/dashboard", "host": ["{{base_url}}"], "path": ["api", "v1", "dashboard"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Fuel Efficiency Report",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/reports/fuel-efficiency", "host": ["{{base_url}}"], "path": ["api", "v1", "reports", "fuel-efficiency"]}
+          }
+        },
+        {
+          "name": "Fleet Utilization Report",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/reports/fleet-utilization", "host": ["{{base_url}}"], "path": ["api", "v1", "reports", "fleet-utilization"]}
+          }
+        },
+        {
+          "name": "Vehicle ROI Report",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/reports/vehicle-roi?vehicle_id=1", "host": ["{{base_url}}"], "path": ["api", "v1", "reports", "vehicle-roi"], "query": [{"key": "vehicle_id", "value": "1"}]}
+          }
+        },
+        {
+          "name": "Trip Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+            "url": {"raw": "{{base_url}}/api/v1/reports/trip-summary", "host": ["{{base_url}}"], "path": ["api", "v1", "reports", "trip-summary"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {"raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"]}
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000", "type": "string"},
+    {"key": "access_token", "value": "YOUR_ACCESS_TOKEN_HERE", "type": "string"},
+    {"key": "refresh_token", "value": "YOUR_REFRESH_TOKEN_HERE", "type": "string"}
+  ]
+}
