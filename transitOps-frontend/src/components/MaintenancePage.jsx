@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Wrench, Play, CheckCircle2, XCircle, AlertTriangle, Search, Plus, 
@@ -25,6 +26,7 @@ const INITIAL_RECORDS = [
 
 export default function MaintenancePage() {
   const [records, setRecords] = useState(INITIAL_RECORDS);
+  const { accessLevel } = useOutletContext();
 
   // Form State
   const [vehicle, setVehicle] = useState(SAMPLE_VEHICLES[0]);
@@ -260,7 +262,8 @@ export default function MaintenancePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT COLUMN: MAINTENANCE FORM & BUSINESS CARD */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
+        {accessLevel !== 'view' && (
+          <div className="lg:col-span-5 flex flex-col gap-6">
           
           <div className="bg-slate-905 border border-slate-850/80 p-5 p-py-4.5 rounded-2xl shadow-premium backdrop-blur-sm">
             <h2 className="text-xs font-black text-slate-200 uppercase tracking-widest mb-4 flex items-center gap-2 pb-2.5 border-b border-slate-850/60">
@@ -443,11 +446,11 @@ export default function MaintenancePage() {
 
             </div>
           </div>
-
         </div>
+        )}
 
         {/* RIGHT COLUMN: LISTING & COST TREND ANALYSIS */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
+        <div className={`${accessLevel === 'view' ? 'lg:col-span-12' : 'lg:col-span-7'} flex flex-col gap-6`}>
 
           {/* FILTERS PANEL */}
           <div className="bg-slate-900/35 border border-slate-850 p-5 rounded-2xl flex flex-col gap-4">
@@ -566,20 +569,24 @@ export default function MaintenancePage() {
                               >
                                 <Eye size={12} />
                               </button>
-                              <button
-                                onClick={() => triggerEdit(r)}
-                                title="Edit log"
-                                className="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-850 transition-colors"
-                              >
-                                <Edit2 size={12} />
-                              </button>
-                              <button
-                                onClick={() => triggerDelete(r)}
-                                title="Delete log"
-                                className="w-7 h-7 bg-slate-900 border border-slate-855 rounded-lg flex items-center justify-center text-rose-450 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-900/30 transition-colors"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+                              {accessLevel !== 'view' && (
+                                <>
+                                  <button
+                                    onClick={() => triggerEdit(r)}
+                                    title="Edit log"
+                                    className="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-850 transition-colors"
+                                  >
+                                    <Edit2 size={12} />
+                                  </button>
+                                  <button
+                                    onClick={() => triggerDelete(r)}
+                                    title="Delete log"
+                                    className="w-7 h-7 bg-slate-900 border border-slate-855 rounded-lg flex items-center justify-center text-rose-450 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-900/30 transition-colors"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         </motion.tr>
@@ -630,18 +637,22 @@ export default function MaintenancePage() {
                           >
                             Details
                           </button>
-                          <button
-                            onClick={() => triggerEdit(r)}
-                            className="px-2.5 py-1.5 bg-slate-800 border border-slate-700/60 rounded-lg text-slate-300 text-[10px] font-bold"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => triggerDelete(r)}
-                            className="px-2.5 py-1.5 bg-rose-950/20 border border-rose-900/30 rounded-lg text-rose-400 text-[10px] font-bold"
-                          >
-                            Delete
-                          </button>
+                          {accessLevel !== 'view' && (
+                            <>
+                              <button
+                                onClick={() => triggerEdit(r)}
+                                className="px-2.5 py-1.5 bg-slate-800 border border-slate-700/60 rounded-lg text-slate-300 text-[10px] font-bold"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => triggerDelete(r)}
+                                className="px-2.5 py-1.5 bg-rose-950/20 border border-rose-900/30 rounded-lg text-rose-400 text-[10px] font-bold"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
 

@@ -329,7 +329,7 @@ export default function TripsPage() {
                 className={selectCls}
               >
                 <option value="" className="bg-slate-950">Select vehicle…</option>
-                {AVAILABLE_VEHICLES.map((v) => (
+                {availableVehicles.map((v) => (
                   <option key={v.id} value={v.id} className="bg-slate-950">{v.label}</option>
                 ))}
               </select>
@@ -342,7 +342,7 @@ export default function TripsPage() {
                 className={selectCls}
               >
                 <option value="" className="bg-slate-950">Select driver…</option>
-                {AVAILABLE_DRIVERS.map((d) => (
+                {availableDrivers.map((d) => (
                   <option key={d} value={d} className="bg-slate-950">{d}</option>
                 ))}
               </select>

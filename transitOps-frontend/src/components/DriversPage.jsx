@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Search, Plus, Eye, Edit2, Trash2, ShieldAlert, AlertTriangle,
@@ -22,6 +23,7 @@ export default function DriversPage() {
   const createDriver = useCreateDriver();
   const updateDriver = useUpdateDriver();
   const deleteDriver = useDeleteDriver();
+  const { accessLevel } = useOutletContext();
 
   const [drivers, setDrivers] = useState([]);
 
@@ -279,13 +281,15 @@ export default function DriversPage() {
         </div>
         
         {/* ADD DRIVER BUTTON */}
-        <button
-          onClick={openAddModal}
-          className="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 flex-shrink-0"
-        >
-          <Plus size={14} className="stroke-[3]" />
-          Add Driver
-        </button>
+        {accessLevel !== 'view' && (
+          <button
+            onClick={openAddModal}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 flex-shrink-0"
+          >
+            <Plus size={14} className="stroke-[3]" />
+            Add Driver
+          </button>
+        )}
       </div>
 
       {/* DUAL COLUMN UPPER SECTION: FILTERS & RBAC BUSINESS CARD */}
@@ -542,22 +546,26 @@ export default function DriversPage() {
                             >
                               <Eye size={12} />
                             </button>
-                            {/* EDIT ICON */}
-                            <button
-                              onClick={() => openEditModal(d)}
-                              title="Edit driver"
-                              className="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-850 transition-colors"
-                            >
-                              <Edit2 size={12} />
-                            </button>
-                            {/* DELETE ICON */}
-                            <button
-                              onClick={() => openDeleteModal(d)}
-                              title="Delete record"
-                              className="w-7 h-7 bg-slate-900 border border-slate-850/80 rounded-lg flex items-center justify-center text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 hover:border-rose-900/30 transition-colors"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            {accessLevel !== 'view' && (
+                              <>
+                                {/* EDIT ICON */}
+                                <button
+                                  onClick={() => openEditModal(d)}
+                                  title="Edit driver"
+                                  className="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-850 transition-colors"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                                {/* DELETE ICON */}
+                                <button
+                                  onClick={() => openDeleteModal(d)}
+                                  title="Delete record"
+                                  className="w-7 h-7 bg-slate-900 border border-slate-850/80 rounded-lg flex items-center justify-center text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 hover:border-rose-900/30 transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </motion.tr>
@@ -637,18 +645,22 @@ export default function DriversPage() {
                         >
                           View Safety
                         </button>
-                        <button
-                          onClick={() => openEditModal(d)}
-                          className="px-2.5 py-1.5 bg-slate-800 border border-slate-700/60 rounded-lg text-slate-300 text-[10px] font-bold"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(d)}
-                          className="px-2.5 py-1.5 bg-rose-950/20 border border-rose-900/30 rounded-lg text-rose-400 text-[10px] font-bold"
-                        >
-                          Delete
-                        </button>
+                        {accessLevel !== 'view' && (
+                          <>
+                            <button
+                              onClick={() => openEditModal(d)}
+                              className="px-2.5 py-1.5 bg-slate-800 border border-slate-700/60 rounded-lg text-slate-300 text-[10px] font-bold"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(d)}
+                              className="px-2.5 py-1.5 bg-rose-950/20 border border-rose-900/30 rounded-lg text-rose-400 text-[10px] font-bold"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
 

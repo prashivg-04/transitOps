@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, Fuel, ReceiptText, ShieldAlert } from 'lucide-react';
 
@@ -256,6 +257,7 @@ export default function FuelExpensesPage() {
   const [expenses,  setExpenses]  = useState(SEED_EXPENSES);
   const [showFuel,  setShowFuel]  = useState(false);
   const [showExp,   setShowExp]   = useState(false);
+  const { accessLevel } = useOutletContext();
 
   // Auto-calculated total operational cost
   const totalOp = useMemo(() => {
@@ -280,22 +282,24 @@ export default function FuelExpensesPage() {
             </p>
           </div>
           
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowFuel(true)}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 cursor-pointer"
-            >
-              + Log Fuel
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowExp(true)}
-              className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-            >
-              + Add Expense
-            </motion.button>
-          </div>
+          {accessLevel !== 'view' && (
+            <div className="flex items-center gap-2.5 flex-shrink-0">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowFuel(true)}
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 cursor-pointer"
+              >
+                + Log Fuel
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowExp(true)}
+                className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                + Add Expense
+              </motion.button>
+            </div>
+          )}
         </div>
 
         {/* ── FUEL LOGS SECTION ── */}

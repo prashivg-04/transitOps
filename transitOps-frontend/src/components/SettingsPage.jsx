@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Save, Sliders, AlertCircle } from 'lucide-react';
 
@@ -69,6 +70,7 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState('INR (Rs)');
   const [distUnit, setDistUnit] = useState('Kilometers');
   const [saved,    setSaved]    = useState(false);
+  const { accessLevel } = useOutletContext();
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -105,6 +107,7 @@ export default function SettingsPage() {
                 onChange={(e) => setDepot(e.target.value)}
                 placeholder="Gandhinagar Depot GJ4"
                 className={inputCls}
+                disabled={accessLevel === 'view'}
               />
             </Field>
 
@@ -113,6 +116,7 @@ export default function SettingsPage() {
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
                 className={selectCls}
+                disabled={accessLevel === 'view'}
               >
                 <option value="INR (Rs)" className="bg-slate-955">INR (Rs)</option>
                 <option value="USD ($)" className="bg-slate-955">USD ($)</option>
@@ -126,6 +130,7 @@ export default function SettingsPage() {
                 value={distUnit}
                 onChange={(e) => setDistUnit(e.target.value)}
                 className={selectCls}
+                disabled={accessLevel === 'view'}
               >
                 <option value="Kilometers" className="bg-slate-955">Kilometers</option>
                 <option value="Miles" className="bg-slate-955">Miles</option>
@@ -133,37 +138,39 @@ export default function SettingsPage() {
             </Field>
 
             {/* Save Changes button */}
-            <motion.button
-              type="submit"
-              whileTap={{ scale: 0.97 }}
-              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-light text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-all shadow-lg active:scale-95 mt-2 cursor-pointer"
-            >
-              <AnimatePresence mode="wait">
-                {saved ? (
-                  <motion.span
-                    key="saved"
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <Check size={13} />
-                    Saved Settings
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    key="save"
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="flex items-center gap-1.5"
-                  >
-                    <Save size={13} />
-                    Save Changes
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </motion.button>
+            {accessLevel !== 'view' && (
+              <motion.button
+                type="submit"
+                whileTap={{ scale: 0.97 }}
+                className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-light text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-all shadow-lg active:scale-95 mt-2 cursor-pointer"
+              >
+                <AnimatePresence mode="wait">
+                  {saved ? (
+                    <motion.span
+                      key="saved"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Check size={13} />
+                      Saved Settings
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="save"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Save size={13} />
+                      Save Changes
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            )}
           </form>
         </div>
 

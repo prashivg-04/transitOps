@@ -6,7 +6,7 @@ import {
   BarChart3, Settings, ChevronLeft, ChevronRight, Search, 
   Bell, LogOut, Activity
 } from 'lucide-react';
-import { canAccess } from '../rbac';
+import { canAccess, getAccess } from '../rbac';
 import { getStoredUser } from '../hooks/useAuth';
 
 export default function DashboardLayout({ onLogout }) {
@@ -235,7 +235,7 @@ export default function DashboardLayout({ onLogout }) {
 
           {/* DYNAMIC CONTENT OUTLET WITH TRANSITION SLIDER */}
           <main className="flex-1 flex flex-col bg-slate-950">
-            <Outlet context={{ searchQuery }} />
+            <Outlet context={{ searchQuery, accessLevel: getAccess(location.pathname, userRole) }} />
           </main>
 
         </motion.div>

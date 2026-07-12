@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Search, Truck, AlertCircle, ShieldAlert, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { useVehicles, useCreateVehicle, useUpdateVehicle, useDeleteVehicle } from '../hooks/useVehicles';
@@ -206,6 +207,7 @@ export default function FleetPage() {
   const createVehicle = useCreateVehicle();
   const updateVehicle = useUpdateVehicle();
   const deleteVehicle = useDeleteVehicle();
+  const { accessLevel } = useOutletContext();
 
   const [typeFilter, setTypeFilter]   = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -265,15 +267,17 @@ export default function FleetPage() {
           </div>
           
           {/* Add Vehicle CTA */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 flex-shrink-0 cursor-pointer"
-          >
-            <Plus size={14} className="stroke-[3]" />
-            Add Vehicle
-          </motion.button>
+          {accessLevel !== 'view' && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 flex-shrink-0 cursor-pointer"
+            >
+              <Plus size={14} className="stroke-[3]" />
+              Add Vehicle
+            </motion.button>
+          )}
         </div>
 
         {/* Filters Panel Row */}
