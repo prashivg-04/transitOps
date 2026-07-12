@@ -176,9 +176,9 @@ export default function TripsPage() {
     if (tripsData?.data && Array.isArray(tripsData.data)) {
       const mapped = tripsData.data.map(t => ({
         id: t.id.toString(),
-        source: t.origin,
-        destination: t.destination,
-        vehicle: t.vehicle?.license_plate || '',
+        source: t.source || t.origin || '',
+        destination: t.destination || '',
+        vehicle: t.vehicle?.registration_number || t.vehicle?.license_plate || '',
         driver: t.driver?.name || '',
         status: mapTripStatus(t.status),
         eta: t.status === 'in_progress' ? t.eta || '' : '',
@@ -191,18 +191,25 @@ export default function TripsPage() {
   // Available vehicles for dispatch
   const availableVehicles = useMemo(() => {
     if (!availableVehiclesData?.data || !Array.isArray(availableVehiclesData.data)) return [];
-    return availableVehiclesData.data.map(v => ({
-      id: v.id,
-      name: v.license_plate,
-      capacityKg: v.capacity || 0,
-      label: `${v.license_plate} – ${v.capacity || 0} kg capacity`
-    }));
+    return availableVehiclesData.data.map(v => {
+      const reg = v.registration_number || v.license_plate || 'Unknown';
+      const cap = v.max_load_capacity || v.capacity || 0;
+      return {
+        id: v.id,
+        name: reg,
+        capacityKg: cap,
+        label: `${reg} – ${cap} kg capacity`
+      };
+    });
   }, [availableVehiclesData]);
 
   // Available drivers for dispatch
   const availableDrivers = useMemo(() => {
     if (!availableDriversData?.data || !Array.isArray(availableDriversData.data)) return [];
-    return availableDriversData.data.map(d => d.name || d.id);
+    return availableDriversData.data.map(d => ({
+      id: d.id,
+      name: d.name || `Driver ${d.id}`
+    }));
   }, [availableDriversData]);
 
   // Form state
@@ -239,19 +246,18 @@ export default function TripsPage() {
     try {
       // First create the trip
       const tripResult = await createTrip.mutateAsync({
-        origin: source.trim(),
+        source: source.trim(),
         destination: destination.trim(),
         cargo_weight: cargo,
-        distance: parseFloat(distKm)
+        planned_distance: parseFloat(distKm),
+        vehicle_id: parseInt(vehicleId),
+        driver_id: parseInt(driver)
       });
 
       // Then dispatch it
       await dispatchTrip.mutateAsync({
         id: tripResult.data.id,
-        dispatchData: {
-          vehicle_id: parseInt(vehicleId),
-          driver_id: availableDrivers.find(d => d.name === driver)?.id || 0
-        }
+        dispatchData: {}
       });
 
       setLifecycleStep('Dispatched');
@@ -343,7 +349,7 @@ export default function TripsPage() {
               >
                 <option value="" className="bg-slate-950">Select driver…</option>
                 {availableDrivers.map((d) => (
-                  <option key={d} value={d} className="bg-slate-950">{d}</option>
+                  <option key={d.id} value={d.id} className="bg-slate-950">{d.name}</option>
                 ))}
               </select>
             </Field>
