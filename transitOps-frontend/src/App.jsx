@@ -13,6 +13,8 @@ import Footer from './components/Footer';
 import Auth from './components/Auth';
 import DashboardLayout from './components/DashboardLayout';
 import DashboardPage from './components/DashboardPage';
+import DriversPage from './components/DriversPage';
+import MaintenancePage from './components/MaintenancePage';
 import PlaceholderPage from './components/PlaceholderPage';
 import { Truck, Users, Route as RouteIcon, Wrench, DollarSign, BarChart3, Settings } from 'lucide-react';
 
@@ -94,16 +96,7 @@ function AppRoutes() {
             />
           } 
         />
-        <Route 
-          path="/drivers" 
-          element={
-            <PlaceholderPage 
-              title="Driver Roster" 
-              description="Monitor driver logging records, hours of service limit rosters, safety metric points and communication channels." 
-              icon={Users} 
-            />
-          } 
-        />
+        <Route path="/drivers" element={<DriversPage />} />
         <Route 
           path="trips" 
           element={
@@ -114,16 +107,7 @@ function AppRoutes() {
             />
           } 
         />
-        <Route 
-          path="/maintenance" 
-          element={
-            <PlaceholderPage 
-              title="Preventive Maintenance" 
-              description="Inspect active maintenance plans, scheduler work cards, mechanic reports, and parts stock audits." 
-              icon={Wrench} 
-            />
-          } 
-        />
+        <Route path="/maintenance" element={<MaintenancePage />} />
         <Route 
           path="/fuel-expenses" 
           element={
