@@ -1,17 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Search, Truck, AlertCircle, ShieldAlert, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { useVehicles, useCreateVehicle, useUpdateVehicle, useDeleteVehicle } from '../hooks/useVehicles';
 
-// ─── Static seed data matching the template ───────────────────────────────────
-const INITIAL_VEHICLES = [
-  { id: 1, regNo: 'GJ01AB452',  name: 'VAN-05',   type: 'Van',   capacity: '500 kg', odometer: 74000,  avgCost: 620000,  status: 'Available' },
-  { id: 2, regNo: 'GJ01AB998',  name: 'TRUCK-11', type: 'Truck', capacity: '5 Ton',  odometer: 182000, avgCost: 2450000, status: 'On Trip'   },
-  { id: 3, regNo: 'GJ01AB120',  name: 'MINI-03',  type: 'Mini',  capacity: '1 Ton',  odometer: 66000,  avgCost: 410000,  status: 'In Shop'   },
-  { id: 4, regNo: 'GJ01AB008',  name: 'VAN-09',   type: 'Van',   capacity: '750 kg', odometer: 241900, avgCost: 590000,  status: 'Retired'   },
-];
-
-const VEHICLE_TYPES = ['All', 'Van', 'Truck', 'Mini'];
+const VEHICLE_TYPES = ['All', 'Truck', 'Van', 'Car', 'Motorcycle', 'Bus', 'Pickup', 'Trailer'];
 const STATUSES      = ['All', 'Available', 'On Trip', 'In Shop', 'Retired'];
+
+// Map API status to display status — backend already returns human-readable values
+const mapStatus = (status) => status ?? 'Available';
 
 // ─── Status badge style map ───────────────────────────────────────────────────
 const STATUS_STYLES = {
@@ -28,25 +24,41 @@ const fmt = (n) =>
 // ─── Add Vehicle Modal ────────────────────────────────────────────────────────
 function AddVehicleModal({ onClose, onAdd }) {
   const [form, setForm] = useState({
-    regNo: '', name: '', type: 'Van', capacity: '', odometer: '', avgCost: '', status: 'Available',
+    regNo: '', name: '', type: 'Van', capacity: '', odometer: '', acquisitionCost: '', status: 'Available',
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.regNo.trim())  return setError('Registration No. is required.');
     if (!form.name.trim())   return setError('Vehicle name / model is required.');
-    if (!form.capacity.trim()) return setError('Capacity is required.');
+    if (!form.capacity || isNaN(parseFloat(form.capacity)) || parseFloat(form.capacity) <= 0)
+      return setError('Capacity must be a positive number (kg).');
     setError('');
-    onAdd({
-      ...form,
-      id: Date.now(),
-      odometer: Number(form.odometer) || 0,
-      avgCost:  Number(form.avgCost)  || 0,
-    });
-    onClose();
+    setIsLoading(true);
+    try {
+      await onAdd({
+        registration_number: form.regNo.trim().toUpperCase(),
+        vehicle_name:        form.name.trim().toUpperCase(),
+        vehicle_type:        form.type,
+        max_load_capacity:   parseFloat(form.capacity),
+        odometer:            parseFloat(form.odometer) || 0,
+        acquisition_cost:    parseFloat(form.acquisitionCost) || 0,
+        status:              form.status,  // 'Available' | 'Retired' etc — exact enum value
+      });
+      onClose();
+    } catch (err) {
+      const msg = err?.response?.data?.detail
+        || err?.response?.data?.message
+        || err?.response?.data?.errors?.[0]?.msg
+        || 'Failed to add vehicle. Please try again.';
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,14 +108,15 @@ function AddVehicleModal({ onClose, onAdd }) {
             </Field>
             <Field label="Type">
               <select value={form.type} onChange={(e) => set('type', e.target.value)} className={selectCls}>
-                {['Van', 'Truck', 'Mini'].map((t) => <option key={t} value={t} className="bg-slate-950">{t}</option>)}
+                {['Truck', 'Van', 'Car', 'Motorcycle', 'Bus', 'Pickup', 'Trailer'].map((t) => <option key={t} value={t} className="bg-slate-950">{t}</option>)}
               </select>
             </Field>
-            <Field label="Capacity" required>
+            <Field label="Capacity (kg)" required>
               <input
+                type="number" min={1}
                 value={form.capacity}
                 onChange={(e) => set('capacity', e.target.value)}
-                placeholder="500 kg"
+                placeholder="1000"
                 className={inputCls}
               />
             </Field>
@@ -119,8 +132,8 @@ function AddVehicleModal({ onClose, onAdd }) {
             <Field label="Avg. Cost (₹)">
               <input
                 type="number" min={0}
-                value={form.avgCost}
-                onChange={(e) => set('avgCost', e.target.value)}
+                value={form.acquisitionCost}
+                onChange={(e) => set('acquisitionCost', e.target.value)}
                 placeholder="0"
                 className={inputCls}
               />
@@ -157,9 +170,10 @@ function AddVehicleModal({ onClose, onAdd }) {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-primary hover:bg-primary-light text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              disabled={isLoading}
+              className="px-4 py-2 bg-primary hover:bg-primary-light text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Add Vehicle
+              {isLoading ? 'Adding…' : 'Add Vehicle'}
             </button>
           </div>
         </form>
@@ -188,23 +202,44 @@ const selectCls =
 
 // ─── Main Fleet Page ──────────────────────────────────────────────────────────
 export default function FleetPage() {
-  const [vehicles, setVehicles]       = useState(INITIAL_VEHICLES);
+  const { data: vehiclesData, isLoading } = useVehicles(0, 100);
+  const createVehicle = useCreateVehicle();
+  const updateVehicle = useUpdateVehicle();
+  const deleteVehicle = useDeleteVehicle();
+
   const [typeFilter, setTypeFilter]   = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [regSearch, setRegSearch]     = useState('');
   const [showModal, setShowModal]     = useState(false);
 
+  // Unwrap backend response: { success, data: [...], page, total, ... }
+  const apiVehicles = useMemo(() => {
+    const items = vehiclesData?.data?.data ?? vehiclesData?.data ?? [];
+    const list = Array.isArray(items) ? items : [];
+    return list.map(v => ({
+      id: v.id,
+      regNo:    v.registration_number,
+      name:     v.vehicle_name,
+      type:     v.vehicle_type,
+      capacity: v.max_load_capacity ? `${v.max_load_capacity} kg` : '',
+      odometer: v.odometer || 0,
+      avgCost:  v.acquisition_cost || 0,
+      status:   mapStatus(v.status),
+    }));
+  }, [vehiclesData]);
+
   const filtered = useMemo(() => {
-    return vehicles.filter((v) => {
+    return apiVehicles.filter((v) => {
       const matchType   = typeFilter   === 'All' || v.type   === typeFilter;
       const matchStatus = statusFilter === 'All' || v.status === statusFilter;
-      const matchReg    = v.regNo.toLowerCase().includes(regSearch.toLowerCase());
+      const matchReg    = v.regNo?.toLowerCase().includes(regSearch.toLowerCase());
       return matchType && matchStatus && matchReg;
     });
-  }, [vehicles, typeFilter, statusFilter, regSearch]);
+  }, [apiVehicles, typeFilter, statusFilter, regSearch]);
 
-  const addVehicle = (vehicle) => {
-    setVehicles((prev) => [...prev, vehicle]);
+  const addVehicle = async (vehiclePayload) => {
+    // vehiclePayload is already in backend field format, built in AddVehicleModal.handleSubmit
+    await createVehicle.mutateAsync(vehiclePayload);
   };
 
   const handleResetFilters = () => {
@@ -315,7 +350,13 @@ export default function FleetPage() {
               </thead>
               <tbody className="divide-y divide-slate-850/40 divide-dashed">
                 <AnimatePresence mode="popLayout">
-                  {filtered.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-16 text-slate-500 text-xs bg-slate-950/20">
+                        Loading vehicles...
+                      </td>
+                    </tr>
+                  ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-16 text-slate-500 text-xs bg-slate-950/20">
                         No vehicles matching target filtering query.

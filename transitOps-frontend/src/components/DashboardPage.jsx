@@ -1,23 +1,12 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Car, Shield, CheckCircle, Navigation, Clock, Users, BarChart3, 
-  MapPin, Check, ChevronDown, ListFilter, AlertTriangle 
+import { useDashboard } from '../hooks/useDashboard';
+import { useTrips } from '../hooks/useTrips';
+import {
+  Car, Shield, CheckCircle, Navigation, Clock, Users, BarChart3,
+  MapPin, Check, ChevronDown, ListFilter, AlertTriangle
 } from 'lucide-react';
-
-// Detailed Mock Trips Data
-const ALL_TRIPS = [
-  { id: 'TR001', vehicle: 'VAN-05', type: 'Van', driver: 'Alex Patel', status: 'On Trip', eta: '45 min', region: 'North' },
-  { id: 'TR002', vehicle: 'TRK-12', type: 'Truck', driver: 'John Doe', status: 'Completed', eta: '--', region: 'South' },
-  { id: 'TR003', vehicle: 'MINI-08', type: 'Mini', driver: 'Priya Sharma', status: 'Dispatched', eta: '1h 10m', region: 'East' },
-  { id: 'TR004', vehicle: '--', type: 'Truck', driver: '--', status: 'Draft', eta: 'Awaiting vehicle', region: 'West' },
-  { id: 'TR005', vehicle: 'VAN-11', type: 'Van', driver: 'Liam Vance', status: 'On Trip', eta: '12 min', region: 'North' },
-  { id: 'TR006', vehicle: 'TRK-09', type: 'Truck', driver: 'Sarah Connor', status: 'Completed', eta: '--', region: 'West' },
-  { id: 'TR007', vehicle: 'MINI-02', type: 'Mini', driver: 'Ken Block', status: 'In Shop', eta: '--', region: 'South' },
-  { id: 'TR008', vehicle: 'TRK-18', type: 'Truck', driver: 'Emma Watson', status: 'Dispatched', eta: '35 min', region: 'East' },
-  { id: 'TR009', vehicle: 'VAN-03', type: 'Van', driver: 'Bob Ross', status: 'Draft', eta: 'Awaiting assignment', region: 'North' }
-];
 
 // Helper to determine status style classes
 const getStatusClasses = (status) => {
@@ -38,10 +27,12 @@ const getStatusClasses = (status) => {
 
 export default function DashboardPage() {
   const { searchQuery } = useOutletContext();
-  
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard();
+  const { data: tripsData, isLoading: tripsLoading } = useTrips(0, 50);
+
   // Custom dropdown open states
   const [activeMenu, setActiveMenu] = useState(null); // 'type' | 'status' | 'region' | null
-  
+
   // Filter States
   const [vehicleType, setVehicleType] = useState('All'); // 'All' | 'Truck' | 'Van' | 'Mini'
   const [statusVal, setStatusVal] = useState('All'); // 'All' | 'On Trip' | 'Completed' | 'Dispatched' | 'Draft' | 'In Shop'
@@ -60,41 +51,59 @@ export default function DashboardPage() {
     setActiveMenu(null);
   };
 
-  // Filter dynamic helper
-  const filteredTrips = ALL_TRIPS.filter(t => {
-    const matchesSearch = searchQuery 
-      ? t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.driver.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
-      
-    const matchesType = vehicleType === 'All' ? true : t.type === vehicleType;
-    const matchesStatus = statusVal === 'All' ? true : t.status === statusVal;
-    const matchesRegion = regionVal === 'All' ? true : t.region === regionVal;
-    
-    return matchesSearch && matchesType && matchesStatus && matchesRegion;
-  });
+  // Get trips from API or use empty array
+  const allTrips = tripsData?.data?.items || [];
 
-  // Calculate dynamic stats metrics based on filter selection to keep calculations authentic
-  const baseStats = {
-    all: { active: 53, available: 42, shop: 5, activeTrips: 18, pending: 9, drivers: 26, utilization: 81 },
-    Truck: { active: 22, available: 15, shop: 2, activeTrips: 8, pending: 4, drivers: 12, utilization: 85 },
-    Van: { active: 18, available: 16, shop: 2, activeTrips: 6, pending: 3, drivers: 9, utilization: 79 },
-    Mini: { active: 13, available: 11, shop: 1, activeTrips: 4, pending: 2, drivers: 5, utilization: 76 }
+  // Map API trip status to display status
+  const mapTripStatus = (trip) => {
+    switch (trip.status) {
+      case 'draft': return 'Draft';
+      case 'dispatched': return 'Dispatched';
+      case 'in_progress': return 'On Trip';
+      case 'completed': return 'Completed';
+      case 'cancelled': return 'Cancelled';
+      default: return trip.status;
+    }
   };
 
-  // Extract relevant stats factors
-  const stats = baseStats[vehicleType] || baseStats.all;
+  // Filter dynamic helper
+  const filteredTrips = allTrips.filter(t => {
+    const displayStatus = mapTripStatus(t);
+    const vehicleDisplay = t.vehicle?.license_plate || '--';
+    const driverDisplay = t.driver?.name || '--';
+    const matchesSearch = searchQuery
+      ? t.id.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vehicleDisplay.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        driverDisplay.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+
+    const matchesStatus = statusVal === 'All' ? true : displayStatus === statusVal;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Use dashboard stats from API
+  const stats = dashboardData?.data ? {
+    active: dashboardData.data.active_vehicles || 0,
+    available: dashboardData.data.available_vehicles || 0,
+    shop: dashboardData.data.in_maintenance_vehicles || 0,
+    activeTrips: dashboardData.data.active_trips || 0,
+    pending: dashboardData.data.pending_trips || 0,
+    drivers: dashboardData.data.drivers_on_duty || 0,
+    utilization: dashboardData.data.fleet_utilization || 0
+  } : {
+    active: 0, available: 0, shop: 0, activeTrips: 0, pending: 0, drivers: 0, utilization: 0
+  };
 
   // Let's configure status counts for the status chart dynamically as well
   const chartStats = {
     available: stats.available,
     onTrip: stats.active,
     inShop: stats.shop,
-    retired: vehicleType === 'All' ? 3 : 1
+    retired: 0
   };
   const totalChartCount = chartStats.available + chartStats.onTrip + chartStats.inShop + chartStats.retired;
-  const getPct = (val) => Math.round((val / totalChartCount) * 100);
+  const getPct = (val) => totalChartCount > 0 ? Math.round((val / totalChartCount) * 100) : 0;
 
   return (
     <div className="flex-1 flex flex-col gap-8 p-6 md:p-8 text-left bg-slate-950 min-h-screen">
@@ -213,7 +222,7 @@ export default function DashboardPage() {
 
       {/* KPI METRICS CARDS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 z-10 w-full select-none">
-        
+
         {/* Active Vehicles */}
         <motion.div
           whileHover={{ y: -3, scale: 1.01 }}
@@ -222,7 +231,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-indigo-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Active Vehicles</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.active}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : stats.active}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -235,7 +244,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-emerald-500 to-teal-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Available Vehicles</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.available}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : stats.available}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -248,7 +257,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-orange-500 to-amber-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">in Maintenance</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.shop.toString().padStart(2, '0')}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : String(stats.shop).padStart(2, '0')}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -261,7 +270,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-sky-500 to-sky-400" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Active Trips</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.activeTrips}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : stats.activeTrips}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -274,7 +283,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-slate-600 to-slate-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Pending Trips</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.pending.toString().padStart(2, '0')}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : String(stats.pending).padStart(2, '0')}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -287,7 +296,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-violet-500 to-indigo-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Drivers on Duty</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.drivers}</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : stats.drivers}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -300,7 +309,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-emerald-500 to-blue-500" />
           <span className="text-[9px] uppercase font-extrabold font-sans text-slate-500 tracking-wider mb-2">Fleet Utilization</span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white">{stats.utilization}%</span>
+            <span className="text-2xl font-black text-white">{dashboardLoading ? '--' : `${stats.utilization}%`}</span>
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mt-1" />
           </div>
         </motion.div>
@@ -333,7 +342,16 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-850/40 divide-dashed">
                   <AnimatePresence mode="popLayout">
-                    {filteredTrips.length > 0 ? (
+                    {tripsLoading ? (
+                      <motion.tr
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <td colSpan={5} className="px-5 py-12 text-center text-slate-500 text-xs">
+                          Loading trips...
+                        </td>
+                      </motion.tr>
+                    ) : filteredTrips.length > 0 ? (
                       filteredTrips.map((t) => (
                         <motion.tr
                           layout
@@ -343,15 +361,15 @@ export default function DashboardPage() {
                           exit={{ opacity: 0 }}
                           className="hover:bg-slate-900/20 transition-all text-slate-300 font-medium"
                         >
-                          <td className="px-5 py-4 font-bold text-white font-mono">{t.id}</td>
-                          <td className="px-5 py-4">{t.vehicle}</td>
-                          <td className="px-5 py-4 font-sans">{t.driver}</td>
+                          <td className="px-5 py-4 font-bold text-white font-mono">TR{t.id}</td>
+                          <td className="px-5 py-4">{t.vehicle?.license_plate || '--'}</td>
+                          <td className="px-5 py-4 font-sans">{t.driver?.name || '--'}</td>
                           <td className="px-5 py-4">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide ${getStatusClasses(t.status)}`}>
-                              {t.status}
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide ${getStatusClasses(mapTripStatus(t))}`}>
+                              {mapTripStatus(t)}
                             </span>
                           </td>
-                          <td className="px-5 py-4 text-slate-400 font-mono">{t.eta}</td>
+                          <td className="px-5 py-4 text-slate-400 font-mono">{t.eta || '--'}</td>
                         </motion.tr>
                       ))
                     ) : (
@@ -386,7 +404,7 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-1.5 select-none">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400 font-bold block">Available</span>
-                  <span className="font-bold text-white font-mono">{chartStats.available} <span className="text-[10px] text-slate-500 font-normal">({getPct(chartStats.available)}%)</span></span>
+                  <span className="font-bold text-white font-mono">{dashboardLoading ? '--' : chartStats.available} <span className="text-[10px] text-slate-500 font-normal">({dashboardLoading ? '--' : `${getPct(chartStats.available)}%`})</span></span>
                 </div>
                 <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-900">
                   <motion.div
@@ -402,7 +420,7 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-1.5 select-none">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400 font-bold block">On Trip</span>
-                  <span className="font-bold text-white font-mono">{chartStats.onTrip} <span className="text-[10px] text-slate-500 font-normal">({getPct(chartStats.onTrip)}%)</span></span>
+                  <span className="font-bold text-white font-mono">{dashboardLoading ? '--' : chartStats.onTrip} <span className="text-[10px] text-slate-500 font-normal">({dashboardLoading ? '--' : `${getPct(chartStats.onTrip)}%`})</span></span>
                 </div>
                 <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-900">
                   <motion.div
@@ -418,7 +436,7 @@ export default function DashboardPage() {
               <div className="flex flex-col gap-1.5 select-none">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400 font-bold block">In Shop (Maintenance)</span>
-                  <span className="font-bold text-white font-mono">{chartStats.inShop} <span className="text-[10px] text-slate-500 font-normal">({getPct(chartStats.inShop)}%)</span></span>
+                  <span className="font-bold text-white font-mono">{dashboardLoading ? '--' : chartStats.inShop} <span className="text-[10px] text-slate-500 font-normal">({dashboardLoading ? '--' : `${getPct(chartStats.inShop)}%`})</span></span>
                 </div>
                 <div className="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-900">
                   <motion.div
@@ -451,7 +469,7 @@ export default function DashboardPage() {
             {/* Bottom summary counter details info */}
             <div className="border-t border-slate-850 pt-4 mt-2 flex justify-between items-center select-none">
               <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Registered Assets</span>
-              <span className="text-sm font-black text-white font-mono">{totalChartCount}</span>
+              <span className="text-sm font-black text-white font-mono">{dashboardLoading ? '--' : totalChartCount}</span>
             </div>
 
           </div>

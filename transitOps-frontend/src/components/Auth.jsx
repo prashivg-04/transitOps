@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Mail, Lock, ShieldCheck, ChevronDown, Check, Loader2, AlertCircle, ArrowRight, User, Building } from 'lucide-react';
+import { useLogin, useRegister } from '../hooks/useAuth';
 
 export default function Auth({ initialView = 'login', onBack, onSuccess }) {
   const [view, setView] = useState(initialView); // 'login' | 'signup'
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [company, setCompany] = useState('');
-  const [role, setRole] = useState('dispatcher'); // dispatcher | fleet_manager | safety | analyst
+  const [role, setRole] = useState('Dispatcher'); // must match backend UserRole enum values
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -15,30 +17,31 @@ export default function Auth({ initialView = 'login', onBack, onSuccess }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Role values MUST match backend UserRole enum exactly
   const roles = [
     {
-      id: 'fleet_manager',
+      id: 'Fleet Manager',
       title: 'Fleet Manager',
       scope: 'Fleet, Maintenance',
       description: 'Manage asset lifecycle, compliance registers, and service schedules.',
       color: 'border-l-accent text-accent bg-emerald-500/5'
     },
     {
-      id: 'dispatcher',
+      id: 'Dispatcher',
       title: 'Dispatcher',
       scope: 'Dashboard, Trips',
       description: 'Assign smart routes, track drivers, and coordinate live loads.',
       color: 'border-l-primary text-primary bg-primary/5'
     },
     {
-      id: 'safety',
+      id: 'Safety Officer',
       title: 'Safety Officer',
       scope: 'Drivers, Compliance',
       description: 'Monitor hours of service (HOS) logs, safety scores, and behavior alerts.',
       color: 'border-l-rose-500 text-rose-500 bg-rose-500/5'
     },
     {
-      id: 'analyst',
+      id: 'Financial Analyst',
       title: 'Financial Analyst',
       scope: 'Fuel & Expenses, Analytics',
       description: 'Audit idle times, verify fuel card scans, and extract tax reports.',
@@ -51,9 +54,11 @@ export default function Auth({ initialView = 'login', onBack, onSuccess }) {
     setDropdownOpen(false);
   };
 
-  const currentRole = roles.find(r => r.id === role);
+  const currentRole = roles.find(r => r.id === role) || roles[1];
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -62,31 +67,65 @@ export default function Auth({ initialView = 'login', onBack, onSuccess }) {
       setErrorMsg('Email address is required.');
       return;
     }
-    if (!password || (password.length < 6 && password !== 'error')) {
-      setErrorMsg('Password must be at least 6 characters.');
+    if (view === 'signup' && !fullName.trim()) {
+      setErrorMsg('Full name is required.');
       return;
     }
-    if (view === 'signup' && !company) {
-      setErrorMsg('Company name is required.');
+    if (!password || password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters.');
+      return;
+    }
+    if (view === 'signup' && !/[A-Z]/.test(password)) {
+      setErrorMsg('Password must contain at least one uppercase letter.');
+      return;
+    }
+    if (view === 'signup' && !/[0-9]/.test(password)) {
+      setErrorMsg('Password must contain at least one digit.');
       return;
     }
 
     setIsLoading(true);
 
-    // Simulate Server Authentication API
-    setTimeout(() => {
-      // Test simulated error state when password is "error" or password is the literal string "error"
-      if (password.toLowerCase() === 'error') {
-        setErrorMsg('Invalid credentials. Account locked after 5 failed attempts.');
-        setIsLoading(false);
-      } else {
+    if (view === 'login') {
+      try {
+        await loginMutation.mutateAsync({ email, password });
         setIsLoading(false);
         setIsSuccess(true);
         setTimeout(() => {
           onSuccess({ email, role, company });
         }, 1500);
+      } catch (error) {
+        setIsLoading(false);
+        const detail = error.response?.data?.detail
+          || error.response?.data?.message
+          || 'Invalid credentials. Please try again.';
+        setErrorMsg(detail);
       }
-    }, 1500);
+    } else {
+      // Signup — call register then auto-login
+      try {
+        await registerMutation.mutateAsync({
+          full_name: fullName.trim(),
+          email,
+          password,
+          role, // already in backend enum format e.g. "Fleet Manager"
+        });
+        // Auto-login after successful registration
+        await loginMutation.mutateAsync({ email, password });
+        setIsLoading(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          onSuccess({ email, role, company: fullName });
+        }, 1500);
+      } catch (error) {
+        setIsLoading(false);
+        const detail = error.response?.data?.detail
+          || error.response?.data?.message
+          || error.response?.data?.errors?.[0]?.msg
+          || 'Registration failed. Please try again.';
+        setErrorMsg(detail);
+      }
+    }
   };
 
   return (
@@ -244,10 +283,27 @@ export default function Auth({ initialView = 'login', onBack, onSuccess }) {
               {/* Form Input fields */}
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 
-                {/* COMPANY NAME (Only in Signup view) */}
+                {/* FULL NAME (Only in Signup view) */}
                 {view === 'signup' && (
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] text-slate-450 uppercase font-bold tracking-wider">Company Name</label>
+                    <label className="text-[10px] text-slate-450 uppercase font-bold tracking-wider">Full Name</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Jane Doe"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800/60 text-sm text-white rounded-xl pl-10 pr-4 py-3 placeholder-slate-600 outline-none focus:border-primary transition-all duration-300 focus:shadow-md focus:shadow-primary/5 shadow-inner"
+                      />
+                      <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                    </div>
+                  </div>
+                )}
+
+                {/* COMPANY NAME (Optional, Only in Signup view) */}
+                {view === 'signup' && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] text-slate-450 uppercase font-bold tracking-wider">Company Name <span className="text-slate-600 normal-case font-normal">(optional)</span></label>
                     <div className="relative">
                       <input
                         type="text"

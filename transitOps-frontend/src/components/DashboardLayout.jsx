@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -6,6 +6,8 @@ import {
   BarChart3, Settings, ChevronLeft, ChevronRight, Search, 
   Bell, LogOut, Activity
 } from 'lucide-react';
+import { canAccess } from '../rbac';
+import { getStoredUser } from '../hooks/useAuth';
 
 export default function DashboardLayout({ onLogout }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -13,17 +15,27 @@ export default function DashboardLayout({ onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Sidebar Path Mappings
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Fleet', path: '/fleet', icon: Truck },
-    { name: 'Drivers', path: '/drivers', icon: Users },
-    { name: 'Trips', path: '/trips', icon: Route },
-    { name: 'Maintenance', path: '/maintenance', icon: Wrench },
-    { name: 'Fuel & Expenses', path: '/fuel-expenses', icon: DollarSign },
-    { name: 'Analytics', path: '/analytics', icon: BarChart3 },
-    { name: 'Settings', path: '/settings', icon: Settings },
+  // Read logged-in user from localStorage (set by useLogin onSuccess)
+  const currentUser = useMemo(() => getStoredUser(), []);
+  const userRole = currentUser?.role ?? 'Dispatcher';
+  const userFullName = currentUser?.full_name ?? 'User';
+  // Build initials from full name
+  const initials = userFullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  // All possible sidebar items
+  const allNavItems = [
+    { name: 'Dashboard',      path: '/dashboard',     icon: LayoutDashboard },
+    { name: 'Fleet',          path: '/fleet',          icon: Truck },
+    { name: 'Drivers',        path: '/drivers',        icon: Users },
+    { name: 'Trips',          path: '/trips',          icon: Route },
+    { name: 'Maintenance',    path: '/maintenance',    icon: Wrench },
+    { name: 'Fuel & Expenses',path: '/fuel-expenses',  icon: DollarSign },
+    { name: 'Analytics',      path: '/analytics',      icon: BarChart3 },
+    { name: 'Settings',       path: '/settings',       icon: Settings },
   ];
+
+  // Filter to only routes this role can access (full or view)
+  const navItems = allNavItems.filter(item => canAccess(item.path, userRole));
 
   // Dynamic header page title resolution based on current path
   const getHeaderTitle = () => {
@@ -207,13 +219,13 @@ export default function DashboardLayout({ onLogout }) {
                 title="Go to Profile"
               >
                 <div className="flex flex-col text-right hidden sm:flex">
-                  <span className="text-xs font-bold text-slate-100 leading-tight">Raven K.</span>
+                  <span className="text-xs font-bold text-slate-100 leading-tight">{userFullName}</span>
                   <span className="text-[9px] text-primary/80 font-bold bg-primary/10 border border-primary/20 rounded px-1.5 py-0.2 w-fit ml-auto uppercase font-mono tracking-wide">
-                    Dispatcher
+                    {userRole}
                   </span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white font-extrabold text-[10px] flex items-center justify-center border border-primary/30 shadow-md shadow-primary/10 select-none">
-                  RK
+                  {initials}
                 </div>
               </button>
 

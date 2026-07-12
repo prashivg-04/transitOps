@@ -1,24 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Search, Plus, Eye, Edit2, Trash2, ShieldAlert, AlertTriangle, 
+import {
+  Users, Search, Plus, Eye, Edit2, Trash2, ShieldAlert, AlertTriangle,
   CheckCircle, Ban, X, RefreshCw, Star, Phone, FileText, ChevronDown, Check, User
 } from 'lucide-react';
+import { useDrivers, useCreateDriver, useUpdateDriver, useDeleteDriver } from '../hooks/useDrivers';
 
-const INITIAL_DRIVERS = [
-  { id: '1', name: 'Alex Patel', licenseNo: 'DL-88213', licenseCategory: 'LMV', licenseExpiry: '2028-12-15', contact: '+91 98765 43210', tripCompletion: 96, safetyScore: 98, status: 'Available' },
-  { id: '2', name: 'John Doe', licenseNo: 'DL-44120', licenseCategory: 'HMV', licenseExpiry: '2025-03-30', contact: '+91 98220 12345', tripCompletion: 81, safetyScore: 76, status: 'Suspended' },
-  { id: '3', name: 'Priya Sharma', licenseNo: 'DL-77031', licenseCategory: 'LMV', licenseExpiry: '2026-08-20', contact: '+91 99110 56789', tripCompletion: 99, safetyScore: 95, status: 'On Trip' },
-  { id: '4', name: 'Suresh Kumar', licenseNo: 'DL-90045', licenseCategory: 'HMV', licenseExpiry: '2027-01-10', contact: '+91 97440 98765', tripCompletion: 88, safetyScore: 89, status: 'Available' },
-  { id: '5', name: 'Vikram Singh', licenseNo: 'DL-12890', licenseCategory: 'HMV', licenseExpiry: '2026-07-30', contact: '+91 95400 11223', tripCompletion: 92, safetyScore: 91, status: 'Off Duty' },
-  { id: '6', name: 'Ananya Rao', licenseNo: 'DL-34567', licenseCategory: 'LMV', licenseExpiry: '2026-09-05', contact: '+91 91234 56789', tripCompletion: 95, safetyScore: 92, status: 'Available' },
-  { id: '7', name: 'Rajesh Nair', licenseNo: 'DL-56789', licenseCategory: 'MCWG', licenseExpiry: '2026-02-15', contact: '+91 88990 01122', tripCompletion: 74, safetyScore: 68, status: 'Available' },
-  { id: '8', name: 'David Miller', licenseNo: 'DL-78901', licenseCategory: 'HMV', licenseExpiry: '2028-09-18', contact: '+91 76543 21098', tripCompletion: 90, safetyScore: 88, status: 'On Trip' },
-  { id: '9', name: 'Neha Gupta', licenseNo: 'DL-23456', licenseCategory: 'LMV', licenseExpiry: '2024-11-05', contact: '+91 99887 76655', tripCompletion: 0, safetyScore: 82, status: 'Off Duty' }
-];
+// Map API status to display status
+const mapDriverStatus = (status) => {
+  switch (status) {
+    case 'available': return 'Available';
+    case 'on_trip': return 'On Trip';
+    case 'off_duty': return 'Off Duty';
+    case 'suspended': return 'Suspended';
+    default: return status;
+  }
+};
 
 export default function DriversPage() {
-  const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
+  const { data: driversData, isLoading } = useDrivers(0, 100);
+  const createDriver = useCreateDriver();
+  const updateDriver = useUpdateDriver();
+  const deleteDriver = useDeleteDriver();
+
+  const [drivers, setDrivers] = useState([]);
+
+  // Unwrap backend response: { success, data: [...], page, total }
+  useEffect(() => {
+    if (!driversData) return;
+    const items = driversData?.data?.data ?? driversData?.data ?? [];
+    const list = Array.isArray(items) ? items : [];
+    const mapped = list.map(d => ({
+      id: d.id.toString(),
+      name: d.name,
+      licenseNo: d.license_number,
+      licenseCategory: d.license_category,
+      licenseExpiry: d.license_expiry,
+      contact: d.contact_number || '',
+      tripCompletion: d.trips_completed || 0,
+      safetyScore: d.safety_score ?? 100,
+      status: d.status,  // backend already returns 'Available' etc
+    }));
+    setDrivers(mapped);
+  }, [driversData]);
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,13 +58,14 @@ export default function DriversPage() {
   // Form Fields
   const [formName, setFormName] = useState('');
   const [formLicenseNo, setFormLicenseNo] = useState('');
-  const [formCategory, setFormCategory] = useState('LMV');
+  const [formCategory, setFormCategory] = useState('B');  // backend: A|B|C|D|E|F
   const [formExpiry, setFormExpiry] = useState('');
   const [formContact, setFormContact] = useState('');
   const [formTripCompletion, setFormTripCompletion] = useState(90);
-  const [formSafetyScore, setFormSafetyScore] = useState(90);
+  const [formSafetyScore, setFormSafetyScore] = useState(100);
   const [formStatus, setFormStatus] = useState('Available');
   const [formErrors, setFormErrors] = useState({});
+  const [formApiError, setFormApiError] = useState('');
 
   // Today marker for dynamic calculation
   const TODAY = new Date('2026-07-12');
@@ -131,13 +156,14 @@ export default function DriversPage() {
   const openAddModal = () => {
     setFormName('');
     setFormLicenseNo('');
-    setFormCategory('LMV');
+    setFormCategory('B');
     setFormExpiry('');
     setFormContact('');
     setFormTripCompletion(90);
-    setFormSafetyScore(90);
+    setFormSafetyScore(100);
     setFormStatus('Available');
     setFormErrors({});
+    setFormApiError('');
     setActiveModal('add');
   };
 
@@ -152,6 +178,7 @@ export default function DriversPage() {
     setFormSafetyScore(driver.safetyScore);
     setFormStatus(driver.status);
     setFormErrors({});
+    setFormApiError('');
     setActiveModal('edit');
   };
 
@@ -170,13 +197,9 @@ export default function DriversPage() {
     if (!formName.trim()) errors.name = 'Driver Name is required';
     if (!formLicenseNo.trim()) {
       errors.licenseNo = 'License Number is required';
-    } else if (!/^DL-[A-Z0-9]{5,8}$/i.test(formLicenseNo.trim())) {
-      errors.licenseNo = 'Invalid license format (Ex: DL-88213)';
     }
     if (!formContact.trim()) {
       errors.contact = 'Contact number is required';
-    } else if (!/^\+?[0-9\s-]{10,14}$/.test(formContact.trim())) {
-      errors.contact = 'Valid contact number layout required';
     }
     if (!formExpiry) errors.expiry = 'Expiry Date is required';
     
@@ -184,42 +207,45 @@ export default function DriversPage() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSaveDriver = (e) => {
+  const handleSaveDriver = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    setFormApiError('');
 
-    if (activeModal === 'add') {
-      const newD = {
-        id: (drivers.length + 1).toString(),
-        name: formName,
-        licenseNo: formLicenseNo.toUpperCase(),
-        licenseCategory: formCategory,
-        licenseExpiry: formExpiry,
-        contact: formContact,
-        tripCompletion: parseInt(formTripCompletion),
-        safetyScore: parseInt(formSafetyScore),
-        status: formStatus
-      };
-      setDrivers([newD, ...drivers]);
-    } else if (activeModal === 'edit' && selectedDriver) {
-      setDrivers(drivers.map(d => d.id === selectedDriver.id ? {
-        ...d,
-        name: formName,
-        licenseNo: formLicenseNo.toUpperCase(),
-        licenseCategory: formCategory,
-        licenseExpiry: formExpiry,
-        contact: formContact,
-        tripCompletion: parseInt(formTripCompletion),
-        safetyScore: parseInt(formSafetyScore),
-        status: formStatus
-      } : d));
+    // Build the payload matching backend DriverCreate/DriverUpdate schema
+    const payload = {
+      name:             formName.trim(),
+      license_number:   formLicenseNo.trim().toUpperCase(),
+      license_category: formCategory,          // 'A'|'B'|'C'|'D'|'E'|'F'
+      license_expiry:   formExpiry,            // 'YYYY-MM-DD'
+      contact_number:   formContact.trim(),
+      safety_score:     parseFloat(formSafetyScore) || 100,
+      status:           formStatus,            // 'Available'|'Off Duty'|'Suspended'
+    };
+
+    try {
+      if (activeModal === 'add') {
+        await createDriver.mutateAsync(payload);
+      } else if (activeModal === 'edit' && selectedDriver) {
+        await updateDriver.mutateAsync({ id: parseInt(selectedDriver.id), driverData: payload });
+      }
+      setActiveModal(null);
+    } catch (err) {
+      const msg = err?.response?.data?.detail
+        || err?.response?.data?.message
+        || err?.response?.data?.errors?.[0]?.msg
+        || 'Failed to save driver. Please try again.';
+      setFormApiError(msg);
     }
-    setActiveModal(null);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (selectedDriver) {
-      setDrivers(drivers.filter(d => d.id !== selectedDriver.id));
+      try {
+        await deleteDriver.mutateAsync(parseInt(selectedDriver.id));
+      } catch (err) {
+        console.error('Delete failed:', err);
+      }
     }
     setActiveModal(null);
   };
@@ -718,9 +744,12 @@ export default function DriversPage() {
                       onChange={(e) => setFormCategory(e.target.value)}
                       className="bg-slate-950 border border-slate-800/80 rounded-xl px-3.5 py-2 text-xs text-white outline-none cursor-pointer focus:border-primary transition-colors focus:bg-slate-950"
                     >
-                      <option value="LMV">LMV (Light Vehicle)</option>
-                      <option value="HMV">HMV (Heavy Vehicle)</option>
-                      <option value="MCWG">MCWG (Motorcycle)</option>
+                      <option value="A">Class A (Motorcycle)</option>
+                      <option value="B">Class B (Light Vehicle)</option>
+                      <option value="C">Class C (Heavy Truck)</option>
+                      <option value="D">Class D (Bus/PSV)</option>
+                      <option value="E">Class E (Articulated)</option>
+                      <option value="F">Class F (Special)</option>
                     </select>
                   </div>
                 </div>
@@ -797,6 +826,13 @@ export default function DriversPage() {
                   </select>
                 </div>
 
+                {/* API Error message */}
+                {formApiError && (
+                  <div className="flex items-center gap-2 text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3.5 py-2.5">
+                    <span>⚠</span> {formApiError}
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-3 border-t border-slate-850 pt-5 mt-3">
                   <button
                     type="button"
@@ -807,9 +843,12 @@ export default function DriversPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+                    disabled={createDriver.isPending || updateDriver.isPending}
+                    className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-60"
                   >
-                    {activeModal === 'add' ? 'Register Driver' : 'Save Changes'}
+                    {(createDriver.isPending || updateDriver.isPending)
+                      ? 'Saving…'
+                      : activeModal === 'add' ? 'Register Driver' : 'Save Changes'}
                   </button>
                 </div>
               </form>

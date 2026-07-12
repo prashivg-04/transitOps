@@ -1,50 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, X, ChevronRight, Zap, RefreshCw } from 'lucide-react';
+import { useTrips, useCreateTrip, useDispatchTrip, useCompleteTrip, useCancelTrip } from '../hooks/useTrips';
+import { useAvailableVehicles } from '../hooks/useVehicles';
+import { useAvailableDrivers } from '../hooks/useDrivers';
 
-// ─── Shared data ──────────────────────────────────────────────────────────────
-// Available vehicles only (excluding On Trip / In Shop / Retired)
-const AVAILABLE_VEHICLES = [
-  { id: 1, name: 'VAN-05',    capacityKg: 500,  label: 'VAN-05 – 500 kg capacity'  },
-  { id: 5, name: 'TRUCK-04',  capacityKg: 5000, label: 'TRUCK-04 – 5 Ton capacity' },
-  { id: 6, name: 'MINI-07',   capacityKg: 1000, label: 'MINI-07 – 1 Ton capacity'  },
-];
-
-const AVAILABLE_DRIVERS = ['Alex', 'Suresh', 'Priya', 'Ramesh'];
-
-// ─── Seed trips matching the template live board ──────────────────────────────
-const SEED_TRIPS = [
-  {
-    id: 'TR009',
-    source: 'Gandhinagar Depot',
-    destination: 'Ahmedabad Hub',
-    vehicle: 'VAN-05',
-    driver: 'ALEX',
-    status: 'Dispatched',
-    eta: '45 min',
-    note: '',
-  },
-  {
-    id: 'TR004',
-    source: 'Vatva Industrial Area',
-    destination: 'Sanand Warehouse',
-    vehicle: 'TRUCK-04',
-    driver: 'SURESH',
-    status: 'Draft',
-    eta: '',
-    note: 'Awaiting driver',
-  },
-  {
-    id: 'TR006',
-    source: 'Mansa',
-    destination: 'Kalol Depot',
-    vehicle: '',
-    driver: '',
-    status: 'Cancelled',
-    eta: '',
-    note: 'Vehicle went to shop',
-  },
-];
+// Map API status to display status
+const mapTripStatus = (status) => {
+  switch (status) {
+    case 'draft': return 'Draft';
+    case 'dispatched': return 'Dispatched';
+    case 'in_progress': return 'On Trip';
+    case 'completed': return 'Completed';
+    case 'cancelled': return 'Cancelled';
+    default: return status;
+  }
+};
 
 // ─── Lifecycle steps ──────────────────────────────────────────────────────────
 const LIFECYCLE_STEPS = ['Draft', 'Dispatched', 'Completed', 'Cancelled'];
@@ -189,8 +160,50 @@ const selectCls =
 
 // ─── Trips Page ───────────────────────────────────────────────────────────────
 export default function TripsPage() {
-  const [trips, setTrips] = useState(SEED_TRIPS);
+  const { data: tripsData, isLoading: tripsLoading } = useTrips(0, 50);
+  const { data: availableVehiclesData } = useAvailableVehicles(0, 50);
+  const { data: availableDriversData } = useAvailableDrivers(0, 50);
+  const createTrip = useCreateTrip();
+  const dispatchTrip = useDispatchTrip();
+  const completeTrip = useCompleteTrip();
+  const cancelTrip = useCancelTrip();
+
+  const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+
+  // Convert API trips to display format
+  useEffect(() => {
+    if (tripsData?.data?.items) {
+      const mapped = tripsData.data.items.map(t => ({
+        id: t.id.toString(),
+        source: t.origin,
+        destination: t.destination,
+        vehicle: t.vehicle?.license_plate || '',
+        driver: t.driver?.name || '',
+        status: mapTripStatus(t.status),
+        eta: t.status === 'in_progress' ? t.eta || '' : '',
+        note: t.notes || ''
+      }));
+      setTrips(mapped);
+    }
+  }, [tripsData]);
+
+  // Available vehicles for dispatch
+  const availableVehicles = useMemo(() => {
+    if (!availableVehiclesData?.data?.items) return [];
+    return availableVehiclesData.data.items.map(v => ({
+      id: v.id,
+      name: v.license_plate,
+      capacityKg: v.capacity || 0,
+      label: `${v.license_plate} – ${v.capacity || 0} kg capacity`
+    }));
+  }, [availableVehiclesData]);
+
+  // Available drivers for dispatch
+  const availableDrivers = useMemo(() => {
+    if (!availableDriversData?.data?.items) return [];
+    return availableDriversData.data.items.map(d => d.name);
+  }, [availableDriversData]);
 
   // Form state
   const [source, setSource]           = useState('');
@@ -201,7 +214,7 @@ export default function TripsPage() {
   const [distKm, setDistKm]           = useState('');
 
   // ── Derived capacity validation ───────────────────────────────────────────
-  const selectedVehicle = AVAILABLE_VEHICLES.find((v) => String(v.id) === vehicleId);
+  const selectedVehicle = availableVehicles.find((v) => String(v.id) === vehicleId);
   const cargo           = parseFloat(cargoKg) || 0;
   const capKg           = selectedVehicle?.capacityKg ?? 0;
   const overload        = cargo > 0 && capKg > 0 && cargo > capKg;
@@ -220,24 +233,35 @@ export default function TripsPage() {
     distKm &&
     !overload;
 
-  const handleDispatch = () => {
+  const handleDispatch = async () => {
     if (!canDispatch) return;
-    const newTrip = {
-      id: nextId(),
-      source: source.trim(),
-      destination: destination.trim(),
-      vehicle: selectedVehicle?.name ?? '',
-      driver: driver.toUpperCase(),
-      status: 'Dispatched',
-      eta: `${distKm} km`,
-      note: '',
-    };
-    setTrips((prev) => [newTrip, ...prev]);
-    setLifecycleStep('Dispatched');
-    // Reset form
-    setSource(''); setDestination(''); setVehicleId('');
-    setDriver(''); setCargoKg(''); setDistKm('');
-    setTimeout(() => setLifecycleStep('Draft'), 1500);
+
+    try {
+      // First create the trip
+      const tripResult = await createTrip.mutateAsync({
+        origin: source.trim(),
+        destination: destination.trim(),
+        cargo_weight: cargo,
+        distance: parseFloat(distKm)
+      });
+
+      // Then dispatch it
+      await dispatchTrip.mutateAsync({
+        id: tripResult.data.id,
+        dispatchData: {
+          vehicle_id: parseInt(vehicleId),
+          driver_id: availableDrivers.find(d => d.name === driver)?.id || 0
+        }
+      });
+
+      setLifecycleStep('Dispatched');
+      // Reset form
+      setSource(''); setDestination(''); setVehicleId('');
+      setDriver(''); setCargoKg(''); setDistKm('');
+      setTimeout(() => setLifecycleStep('Draft'), 1500);
+    } catch (error) {
+      console.error('Failed to dispatch trip:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -410,7 +434,11 @@ export default function TripsPage() {
           {/* Trip cards */}
           <div className="flex flex-col gap-3">
             <AnimatePresence mode="popLayout">
-              {trips.map((trip) => (
+              {tripsLoading ? (
+                <div className="text-center text-slate-500 text-xs py-16">
+                  Loading trips...
+                </div>
+              ) : trips.map((trip) => (
                 <TripCard
                   key={trip.id}
                   trip={trip}
@@ -420,7 +448,7 @@ export default function TripsPage() {
               ))}
             </AnimatePresence>
 
-            {trips.length === 0 && (
+            {!tripsLoading && trips.length === 0 && (
               <div className="text-center text-slate-500 text-xs py-16 bg-slate-950/20 border border-dashed border-slate-850 rounded-2xl">
                 No active smart trips recorded. Dispatch your first trip.
               </div>

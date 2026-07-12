@@ -21,6 +21,9 @@ import AnalyticsPage from './components/AnalyticsPage';
 import FuelExpensesPage from './components/FuelExpensesPage';
 import SettingsPage from './components/SettingsPage';
 import ProfilePage from './components/ProfilePage';
+import RoleGuard from './components/RoleGuard';
+import { defaultRouteForRole } from './rbac';
+import { getStoredUser } from './hooks/useAuth';
 
 function LandingView({ onNavigate }) {
   return (
@@ -72,7 +75,10 @@ function AppRoutes() {
           <Auth
             initialView="login"
             onBack={() => navigate('/')}
-            onSuccess={() => navigate('/dashboard')}
+            onSuccess={() => {
+              const user = getStoredUser();
+              navigate(defaultRouteForRole(user?.role));
+            }}
           />
         } 
       />
@@ -82,7 +88,10 @@ function AppRoutes() {
           <Auth
             initialView="signup"
             onBack={() => navigate('/')}
-            onSuccess={() => navigate('/dashboard')}
+            onSuccess={() => {
+              const user = getStoredUser();
+              navigate(defaultRouteForRole(user?.role));
+            }}
           />
         } 
       />
@@ -90,14 +99,14 @@ function AppRoutes() {
       {/* Dashboard Subrouter Outlet Layout */}
       
 <Route element={<DashboardLayout onLogout={() => navigate('/')} />}>
-  <Route path="/dashboard" element={<DashboardPage />} />
-  <Route path="/fleet" element={<FleetPage />} />
-  <Route path="/drivers" element={<DriversPage />} />
-  <Route path="/trips" element={<TripsPage />} />
-  <Route path="/maintenance" element={<MaintenancePage />} />
-  <Route path="/fuel-expenses" element={<FuelExpensesPage />} />
-  <Route path="/analytics" element={<AnalyticsPage />} />
-  <Route path="/settings" element={<SettingsPage />} />
+  <Route path="/dashboard" element={<RoleGuard><DashboardPage /></RoleGuard>} />
+  <Route path="/fleet" element={<RoleGuard><FleetPage /></RoleGuard>} />
+  <Route path="/drivers" element={<RoleGuard><DriversPage /></RoleGuard>} />
+  <Route path="/trips" element={<RoleGuard><TripsPage /></RoleGuard>} />
+  <Route path="/maintenance" element={<RoleGuard><MaintenancePage /></RoleGuard>} />
+  <Route path="/fuel-expenses" element={<RoleGuard><FuelExpensesPage /></RoleGuard>} />
+  <Route path="/analytics" element={<RoleGuard><AnalyticsPage /></RoleGuard>} />
+  <Route path="/settings" element={<RoleGuard><SettingsPage /></RoleGuard>} />
   <Route path="/profile" element={<ProfilePage />} />
 </Route>
 
