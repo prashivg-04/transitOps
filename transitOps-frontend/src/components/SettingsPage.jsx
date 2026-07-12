@@ -2,49 +2,46 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Save, Sliders, AlertCircle } from 'lucide-react';
 
-// ─── RBAC data matching the template ─────────────────────────────────────────
+// ─── RBAC — rows = tabs, columns = roles ───────────────────────────────────────────
 // Access values: 'full' | 'view' | 'none'
-const RBAC_ROLES = [
-  {
-    role: 'Fleet Manager',
-    access: { fleet: 'full', drivers: 'full', trips: 'none', fuelExp: 'none', analytics: 'full' },
-  },
-  {
-    role: 'Dispatcher',
-    access: { fleet: 'view', drivers: 'none', trips: 'full', fuelExp: 'none', analytics: 'none' },
-  },
-  {
-    role: 'Safety Officer',
-    access: { fleet: 'none', drivers: 'full', trips: 'view', fuelExp: 'none', analytics: 'none' },
-  },
-  {
-    role: 'Financial Analyst',
-    access: { fleet: 'view', drivers: 'none', trips: 'none', fuelExp: 'full', analytics: 'full' },
-  },
+const RBAC_ROLE_COLS = [
+  { key: 'fleetManager',    label: 'Fleet Manager'    },
+  { key: 'dispatcher',      label: 'Dispatcher'       },
+  { key: 'safetyOfficer',   label: 'Safety Officer'   },
+  { key: 'financialAnalyst',label: 'Financial Analyst' },
 ];
 
-const RBAC_COLS = [
-  { key: 'fleet',     label: 'Fleet'     },
-  { key: 'drivers',   label: 'Drivers'   },
-  { key: 'trips',     label: 'Trips'     },
-  { key: 'fuelExp',   label: 'Fuel/Exp.' },
-  { key: 'analytics', label: 'Analytics' },
+const RBAC_ROWS = [
+  { tab: 'Dashboard',      access: { fleetManager: 'full', dispatcher: 'view', safetyOfficer: 'view', financialAnalyst: 'view' } },
+  { tab: 'Fleet',          access: { fleetManager: 'full', dispatcher: 'view', safetyOfficer: 'none', financialAnalyst: 'view' } },
+  { tab: 'Drivers',        access: { fleetManager: 'view', dispatcher: 'view', safetyOfficer: 'full', financialAnalyst: 'none' } },
+  { tab: 'Trips',          access: { fleetManager: 'view', dispatcher: 'full', safetyOfficer: 'view', financialAnalyst: 'view' } },
+  { tab: 'Maintenance',    access: { fleetManager: 'full', dispatcher: 'none', safetyOfficer: 'none', financialAnalyst: 'view' } },
+  { tab: 'Fuel & Expenses',access: { fleetManager: 'view', dispatcher: 'none', safetyOfficer: 'none', financialAnalyst: 'full' } },
+  { tab: 'Analytics',      access: { fleetManager: 'full', dispatcher: 'none', safetyOfficer: 'none', financialAnalyst: 'full' } },
+  { tab: 'Settings',       access: { fleetManager: 'full', dispatcher: 'view', safetyOfficer: 'view', financialAnalyst: 'view' } },
 ];
 
 // ─── Access cell renderer ─────────────────────────────────────────────────────
 function AccessCell({ value }) {
   if (value === 'full') {
     return (
-      <span className="text-emerald-400 font-extrabold text-sm select-none">✓</span>
+      <span className="text-[11px] font-bold text-slate-200 uppercase tracking-wide select-none">
+        Full
+      </span>
     );
   }
   if (value === 'view') {
     return (
-      <span className="text-blue-400 text-[10px] font-extrabold uppercase tracking-wide select-none">View</span>
+      <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wide select-none">
+        View
+      </span>
     );
   }
   return (
-    <span className="text-slate-700 text-sm font-extrabold font-mono select-none">—</span>
+    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide select-none">
+      No Access
+    </span>
   );
 }
 
@@ -180,31 +177,31 @@ export default function SettingsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse text-left select-none">
                 <thead>
-                  <tr className="border-b border-slate-850/80 bg-slate-900/40 text-slate-500 uppercase tracking-widest text-[9px] font-extrabold font-mono">
-                    <th className="px-5 py-4 w-40 whitespace-nowrap">
-                      User role
+                  <tr className="border-b border-slate-850/80 bg-slate-900/40 text-slate-400 uppercase tracking-widest text-[9px] font-extrabold font-mono">
+                    <th className="px-5 py-4 w-36 whitespace-nowrap">
+                      Tab
                     </th>
-                    {RBAC_COLS.map((col) => (
-                      <th key={col.key} className="text-center px-4 py-4 whitespace-nowrap">
+                    {RBAC_ROLE_COLS.map((col) => (
+                      <th key={col.key} className="px-5 py-4 whitespace-nowrap font-extrabold text-slate-300 text-[10px] normal-case tracking-normal">
                         {col.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850/40 divide-dashed">
-                  {RBAC_ROLES.map((row, i) => (
+                  {RBAC_ROWS.map((row, i) => (
                     <motion.tr
-                      key={row.role}
+                      key={row.tab}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.06 }}
-                      className="hover:bg-slate-900/20 text-slate-300 font-medium transition-colors"
+                      transition={{ delay: i * 0.05 }}
+                      className="hover:bg-slate-900/20 transition-colors"
                     >
-                      <td className="px-5 py-4 font-bold text-white text-[11px] whitespace-nowrap">
-                        {row.role}
+                      <td className="px-5 py-4 font-extrabold text-white text-[11px] whitespace-nowrap">
+                        {row.tab}
                       </td>
-                      {RBAC_COLS.map((col) => (
-                        <td key={col.key} className="px-4 py-4 text-center">
+                      {RBAC_ROLE_COLS.map((col) => (
+                        <td key={col.key} className="px-5 py-4">
                           <AccessCell value={row.access[col.key]} />
                         </td>
                       ))}
@@ -216,18 +213,18 @@ export default function SettingsPage() {
           </div>
 
           {/* Legend container */}
-          <div className="flex flex-wrap items-center gap-5 mt-1 bg-slate-950/40 p-4 rounded-xl border border-slate-900">
+          <div className="flex flex-wrap items-center gap-6 mt-1 bg-slate-950/40 p-4 rounded-xl border border-slate-900">
             <div className="flex items-center gap-2">
-              <span className="text-emerald-400 font-extrabold text-sm leading-none">✓</span>
+              <span className="text-[11px] font-bold text-slate-200 uppercase tracking-wide">Full</span>
               <span className="text-[10px] text-slate-500 font-medium">Full permission control</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-blue-405 text-[10px] font-extrabold uppercase tracking-wide">View</span>
+              <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wide">View</span>
               <span className="text-[10px] text-slate-500 font-medium">Read-Only directory visibility</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-700 font-extrabold leading-none">—</span>
-              <span className="text-[10px] text-slate-500 font-medium font-sans">No route access allowed</span>
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide">No Access</span>
+              <span className="text-[10px] text-slate-500 font-medium">No route access allowed</span>
             </div>
           </div>
         </div>
