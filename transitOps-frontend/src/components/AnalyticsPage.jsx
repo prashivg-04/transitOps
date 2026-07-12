@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { BarChart3, AlertCircle } from 'lucide-react';
 
 // ─── KPI data ─────────────────────────────────────────────────────────────────
 const KPI_CARDS = [
@@ -8,28 +9,28 @@ const KPI_CARDS = [
     value:  '8.4',
     unit:   'km/l',
     accent: '#3b82f6',   // blue
-    accentBg: 'rgba(59,130,246,0.08)',
+    accentBg: 'rgba(59,130,246,0.03)',
   },
   {
     label:  'Fleet Utilization',
     value:  '81',
     unit:   '%',
     accent: '#22c55e',   // green
-    accentBg: 'rgba(34,197,94,0.08)',
+    accentBg: 'rgba(34,197,94,0.03)',
   },
   {
     label:  'Operational Cost',
     value:  '34,070',
     unit:   '',
     accent: '#f97316',   // orange
-    accentBg: 'rgba(249,115,22,0.08)',
+    accentBg: 'rgba(249,115,22,0.03)',
   },
   {
     label:  'Vehicle ROI',
     value:  '14.2',
     unit:   '%',
     accent: '#eab308',   // yellow
-    accentBg: 'rgba(234,179,8,0.08)',
+    accentBg: 'rgba(234,179,8,0.03)',
   },
 ];
 
@@ -49,9 +50,9 @@ const MONTHLY_REVENUE = [
 
 // ─── Costliest vehicles horizontal bar data ───────────────────────────────────
 const COSTLIEST = [
-  { name: 'TRUCK-11', cost: 2450000, color: '#f87171' },  // red
+  { name: 'TRUCK-11', cost: 2450000, color: '#ef4444' },  // red
   { name: 'MINI-03',  cost: 410000,  color: '#f97316' },  // orange
-  { name: 'VAN-05',   cost: 620000,  color: '#60a5fa' },  // blue
+  { name: 'VAN-05',   cost: 620000,  color: '#3b82f6' },  // blue
 ];
 const MAX_COST = Math.max(...COSTLIEST.map((c) => c.cost));
 
@@ -90,21 +91,21 @@ function KpiCard({ label, value, unit, accent, accentBg, delay }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="flex-1 min-w-0 rounded-lg border border-[#1e1e1e] bg-[#0d0d0d] p-4 flex flex-col gap-2 relative overflow-hidden"
-      style={{ borderLeft: `3px solid ${accent}`, background: accentBg }}
+      className="bg-slate-900/35 border border-slate-850 p-5 rounded-2xl shadow-premium backdrop-blur-sm relative overflow-hidden flex flex-col gap-2 group hover:border-slate-800 transition-colors"
+      style={{ borderLeft: `4px solid ${accent}`, background: accentBg }}
     >
       <span
-        className="text-[9px] font-bold uppercase tracking-widest"
+        className="text-[10px] font-black uppercase tracking-wider transition-colors"
         style={{ color: accent }}
       >
         {label}
       </span>
-      <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-extrabold text-white leading-none font-mono">
+      <div className="flex items-baseline gap-1 mt-0.5">
+        <span className="text-3xl font-extrabold text-white leading-none font-mono tracking-tight">
           {formatted}
         </span>
         {unit && (
-          <span className="text-base font-bold text-slate-400 font-mono">{unit}</span>
+          <span className="text-sm font-bold text-slate-400 font-mono ml-0.5">{unit}</span>
         )}
       </div>
     </motion.div>
@@ -112,10 +113,10 @@ function KpiCard({ label, value, unit, accent, accentBg, delay }) {
 }
 
 // ─── SVG Bar Chart (Monthly Revenue) ─────────────────────────────────────────
-const CHART_H   = 160;
-const CHART_PAD = { top: 10, bottom: 28, left: 4, right: 4 };
-const BAR_COLOR = '#60a5fa';
-const BAR_GAP   = 6;
+const CHART_H   = 180;
+const CHART_PAD = { top: 12, bottom: 28, left: 4, right: 4 };
+const BAR_COLOR = '#3B82F6';
+const BAR_GAP   = 8;
 
 function RevenueBarChart({ data }) {
   const [animated, setAnimated] = useState(false);
@@ -135,7 +136,7 @@ function RevenueBarChart({ data }) {
       ref={ref}
       width="100%"
       height={CHART_H}
-      className="overflow-visible"
+      className="overflow-visible select-none"
       viewBox={`0 0 ${data.length * 48} ${CHART_H}`}
       preserveAspectRatio="none"
     >
@@ -147,15 +148,15 @@ function RevenueBarChart({ data }) {
 
         return (
           <g key={d.month}>
-            {/* Bar */}
+            {/* Bar with gradient accent style */}
             <rect
               x={x}
               y={CHART_PAD.top + innerH}
               width={bw}
               height={0}
-              rx={3}
+              rx={4}
               fill={BAR_COLOR}
-              opacity={0.85}
+              opacity={0.8}
               style={{
                 transition: `y 0.7s cubic-bezier(.22,1,.36,1) ${i * 0.04}s, height 0.7s cubic-bezier(.22,1,.36,1) ${i * 0.04}s`,
               }}
@@ -191,10 +192,10 @@ function RevenueBarChart({ data }) {
             {/* Month label */}
             <text
               x={x + bw / 2}
-              y={CHART_H - 6}
+              y={CHART_H - 8}
               textAnchor="middle"
               fontSize="8"
-              fill="#4b5563"
+              fill="#64748B"
               fontFamily="monospace"
               fontWeight="bold"
             >
@@ -217,21 +218,21 @@ function CostBar({ name, cost, color, maxCost, delay }) {
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="flex items-center gap-3"
+      className="flex items-center gap-4 select-none"
     >
       <span className="text-[10px] font-bold text-slate-400 font-mono w-16 flex-shrink-0">
         {name}
       </span>
-      <div className="flex-1 bg-[#1a1a1a] rounded h-5 overflow-hidden">
+      <div className="flex-1 bg-slate-950 border border-slate-900 rounded-xl h-6 overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ delay: delay + 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="h-full rounded"
+          className="h-full rounded-xl"
           style={{ background: color }}
         />
       </div>
-      <span className="text-[10px] text-slate-500 font-mono w-20 text-right flex-shrink-0">
+      <span className="text-[10px] text-slate-400 font-mono w-20 text-right flex-shrink-0 font-bold">
         ₹{fmt}
       </span>
     </motion.div>
@@ -241,34 +242,48 @@ function CostBar({ name, cost, color, maxCost, delay }) {
 // ─── Analytics Page ───────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   return (
-    <div className="flex-1 p-6 flex flex-col gap-6 min-h-0 overflow-y-auto">
+    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 min-h-screen text-left bg-slate-950 font-sans relative">
+
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
+          <BarChart3 size={20} className="text-primary-light" />
+          Operations Intelligence
+        </h1>
+        <p className="text-xs text-slate-500 max-w-xl mt-1">
+          Evaluate fuel diagnostics, equipment uptime, operational cost allocations, and acquisition asset ROI.
+        </p>
+      </div>
 
       {/* ── KPI Cards Row ── */}
-      <div className="flex gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {KPI_CARDS.map((card, i) => (
           <KpiCard key={card.label} {...card} delay={i * 0.08} />
         ))}
       </div>
 
       {/* ── ROI formula note ── */}
-      <p className="text-[10px] text-slate-600 font-mono -mt-2">
-        ROI = (Revenue – (Maintenance + Fuel)) / Acquisition Cost
-      </p>
+      <div className="flex items-center gap-2 bg-slate-900/20 border border-slate-850/50 p-4 rounded-xl -mt-2">
+        <AlertCircle size={14} className="text-slate-550 flex-shrink-0" />
+        <p className="text-[10px] text-slate-500 leading-normal font-mono font-medium">
+          ROI Calculation Formula: (Revenue – (Maintenance + Fuel Refuel)) / Acquisition Cost
+        </p>
+      </div>
 
       {/* ── Charts Row ── */}
-      <div className="flex gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 items-stretch">
 
         {/* Monthly Revenue Chart */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
-          className="flex-1 flex flex-col gap-3 bg-[#0d0d0d] border border-[#1e1e1e] rounded-lg p-5"
+          className="lg:col-span-8 flex flex-col gap-5 bg-slate-900/35 border border-slate-850 p-6 rounded-2xl shadow-premium backdrop-blur-sm"
         >
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Monthly Revenue
+          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">
+            Monthly Operation Revenue (₹ Lakhs)
           </span>
-          <div className="flex-1 flex items-end">
+          <div className="flex-1 flex items-end pt-3">
             <RevenueBarChart data={MONTHLY_REVENUE} />
           </div>
         </motion.div>
@@ -278,12 +293,12 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.4 }}
-          className="w-[380px] flex-shrink-0 flex flex-col gap-5 bg-[#0d0d0d] border border-[#1e1e1e] rounded-lg p-5"
+          className="lg:col-span-4 flex flex-col gap-5 bg-slate-900/35 border border-slate-850 p-6 rounded-2xl shadow-premium backdrop-blur-sm"
         >
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Top Costliest Vehicles
+          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">
+            Top Costliest Fleet Assets
           </span>
-          <div className="flex flex-col gap-4 flex-1 justify-center">
+          <div className="flex flex-col gap-4 flex-1 justify-center py-2">
             {COSTLIEST.map((item, i) => (
               <CostBar
                 key={item.name}

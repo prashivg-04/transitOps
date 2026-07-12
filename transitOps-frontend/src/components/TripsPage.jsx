@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, X, ChevronRight, Zap } from 'lucide-react';
+import { AlertCircle, X, ChevronRight, Zap, RefreshCw } from 'lucide-react';
 
 // ─── Shared data ──────────────────────────────────────────────────────────────
 // Available vehicles only (excluding On Trip / In Shop / Retired)
@@ -53,7 +53,7 @@ const STEP_COLORS = {
   Draft:      'text-slate-400  border-slate-600',
   Dispatched: 'text-sky-400    border-sky-500',
   Completed:  'text-emerald-400 border-emerald-500',
-  Cancelled:  'text-rose-400   border-rose-500',
+  Cancelled:  'text-rose-450   border-rose-500',
 };
 
 const STEP_BG = {
@@ -65,24 +65,21 @@ const STEP_BG = {
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const BADGE_STYLES = {
-  Dispatched: 'bg-sky-500    text-white',
-  Draft:      'bg-slate-600  text-slate-200',
-  Completed:  'bg-emerald-600 text-white',
-  Cancelled:  'bg-rose-400   text-white',
+  Dispatched: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  Draft:      'bg-slate-800/40 text-slate-400 border border-slate-700/50',
+  Completed:  'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  Cancelled:  'bg-rose-500/10 text-rose-400 border border-rose-500/20',
 };
 
 // ─── ID generator ─────────────────────────────────────────────────────────────
 let tripCounter = 10;
 const nextId = () => `TR0${tripCounter++}`;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const parseCap = (kg) => kg; // already numeric in AVAILABLE_VEHICLES
-
 // ─── Lifecycle Stepper ───────────────────────────────────────────────────────
 function LifecycleStepper({ currentStep }) {
   const activeIdx = LIFECYCLE_STEPS.indexOf(currentStep);
   return (
-    <div className="flex items-center gap-0 w-full">
+    <div className="flex items-center gap-0 w-full bg-slate-950/40 p-4 rounded-xl border border-slate-900">
       {LIFECYCLE_STEPS.map((step, i) => {
         const isActive  = i === activeIdx;
         const isPast    = i < activeIdx;
@@ -90,26 +87,26 @@ function LifecycleStepper({ currentStep }) {
 
         return (
           <React.Fragment key={step}>
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+            <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
               <div
-                className={`w-3 h-3 rounded-full border-2 transition-all ${
+                className={`w-3.5 h-3.5 rounded-full border-2 transition-all flex items-center justify-center ${
                   isActive
-                    ? `${STEP_BG[step]} border-transparent shadow-lg`
+                    ? `${STEP_BG[step]} border-transparent ring-4 ring-sky-500/15 shadow-lg`
                     : isPast
                     ? 'bg-slate-500 border-transparent'
-                    : 'bg-transparent border-slate-600'
+                    : 'bg-transparent border-slate-800'
                 }`}
               />
               <span
-                className={`text-[9px] font-bold uppercase tracking-wide transition-colors ${
-                  isActive ? STEP_COLORS[step].split(' ')[0] : 'text-slate-600'
+                className={`text-[9px] font-black uppercase tracking-wider transition-colors mt-0.5 ${
+                  isActive ? STEP_COLORS[step].split(' ')[0] : 'text-slate-655'
                 }`}
               >
                 {step}
               </span>
             </div>
             {!isLast && (
-              <div className={`flex-1 h-px mb-3 mx-1 transition-colors ${isPast ? 'bg-slate-500' : 'bg-slate-700'}`} />
+              <div className={`flex-1 h-0.5 mb-4 mx-1.5 transition-colors ${isPast ? 'bg-slate-500' : 'bg-slate-850/80'}`} />
             )}
           </React.Fragment>
         );
@@ -127,10 +124,10 @@ function TripCard({ trip, onSelect, isSelected }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: 20 }}
       onClick={() => onSelect(trip)}
-      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+      className={`p-4 border rounded-2xl cursor-pointer transition-all ${
         isSelected
-          ? 'border-sky-500/40 bg-sky-500/5'
-          : 'border-[#1e1e1e] bg-[#0d0d0d] hover:border-[#2a2a2a] hover:bg-[#111]'
+          ? 'border-primary/40 bg-primary/[0.04] shadow-premium'
+          : 'border-slate-850/80 bg-slate-900/15 hover:border-slate-800 hover:bg-slate-900/30'
       }`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -145,7 +142,7 @@ function TripCard({ trip, onSelect, isSelected }) {
             {trip.destination}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded ${BADGE_STYLES[trip.status] ?? 'bg-slate-700 text-white'}`}>
+            <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-lg ${BADGE_STYLES[trip.status] ?? 'bg-slate-700/40 text-slate-350 border border-slate-650'}`}>
               {trip.status}
             </span>
           </div>
@@ -154,17 +151,17 @@ function TripCard({ trip, onSelect, isSelected }) {
         {/* Right: vehicle / driver / eta */}
         <div className="text-right flex flex-col gap-1 flex-shrink-0">
           {(trip.vehicle || trip.driver) ? (
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">
               {[trip.vehicle, trip.driver].filter(Boolean).join(' / ')}
             </span>
           ) : (
-            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wide">Unassigned</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Unassigned</span>
           )}
           {trip.eta && (
-            <span className="text-[10px] text-slate-500">{trip.eta}</span>
+            <span className="text-[10px] text-slate-400 font-mono mt-0.5">{trip.eta}</span>
           )}
           {trip.note && (
-            <span className="text-[10px] text-slate-600 italic">{trip.note}</span>
+            <span className="text-[10px] text-slate-500 italic mt-0.5">{trip.note}</span>
           )}
         </div>
       </div>
@@ -176,7 +173,7 @@ function TripCard({ trip, onSelect, isSelected }) {
 function Field({ label, children }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+      <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
         {label}
       </label>
       {children}
@@ -185,7 +182,10 @@ function Field({ label, children }) {
 }
 
 const inputCls =
-  'w-full bg-transparent border border-[#2a2a2a] text-white text-xs rounded px-3 py-2.5 outline-none focus:border-slate-500 transition-colors placeholder-slate-700 font-mono';
+  'w-full bg-slate-950 border border-slate-800/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-primary transition-colors';
+
+const selectCls =
+  'w-full bg-slate-950 border border-slate-800/80 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none cursor-pointer focus:border-primary transition-colors focus:bg-slate-950';
 
 // ─── Trips Page ───────────────────────────────────────────────────────────────
 export default function TripsPage() {
@@ -247,179 +247,195 @@ export default function TripsPage() {
   };
 
   return (
-    <div className="flex-1 flex gap-0 min-h-0 h-full">
-
-      {/* ══════════════ LEFT: TRIP CREATOR ══════════════ */}
-      <div className="w-[420px] flex-shrink-0 border-r border-[#1a1a1a] p-6 flex flex-col gap-5 overflow-y-auto">
-
-        {/* Lifecycle stepper */}
-        <div className="flex flex-col gap-3">
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Trip Lifecycle
-          </span>
-          <LifecycleStepper currentStep={lifecycleStep} />
-        </div>
-
-        <div className="h-px bg-[#1a1a1a]" />
-
-        {/* Create Trip form */}
-        <div className="flex flex-col gap-4">
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Create Trip
-          </span>
-
-          <Field label="Source">
-            <input
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              placeholder="Gandhinagar Depot"
-              className={inputCls}
-            />
-          </Field>
-
-          <Field label="Destination">
-            <input
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="Ahmedabad Hub"
-              className={inputCls}
-            />
-          </Field>
-
-          <Field label="Vehicle (Available Only)">
-            <select
-              value={vehicleId}
-              onChange={(e) => setVehicleId(e.target.value)}
-              className={`${inputCls} cursor-pointer`}
-            >
-              <option value="">Select vehicle…</option>
-              {AVAILABLE_VEHICLES.map((v) => (
-                <option key={v.id} value={v.id}>{v.label}</option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Driver (Available Only)">
-            <select
-              value={driver}
-              onChange={(e) => setDriver(e.target.value)}
-              className={`${inputCls} cursor-pointer`}
-            >
-              <option value="">Select driver…</option>
-              {AVAILABLE_DRIVERS.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Cargo Weight (kg)">
-            <input
-              type="number" min={0}
-              value={cargoKg}
-              onChange={(e) => setCargoKg(e.target.value)}
-              placeholder="700"
-              className={inputCls}
-            />
-          </Field>
-
-          <Field label="Planned Distance (km)">
-            <input
-              type="number" min={0}
-              value={distKm}
-              onChange={(e) => setDistKm(e.target.value)}
-              placeholder="35"
-              className={inputCls}
-            />
-          </Field>
-
-          {/* ── Capacity validation block ── */}
-          <AnimatePresence>
-            {overload && selectedVehicle && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="border border-rose-500/40 bg-rose-500/5 rounded px-4 py-3 flex flex-col gap-1"
-              >
-                <span className="text-[11px] text-rose-300/80">
-                  Vehicle Capacity: {capKg >= 1000 ? `${capKg / 1000} Ton` : `${capKg} kg`}
-                </span>
-                <span className="text-[11px] text-rose-300/80">
-                  Cargo Weight: {cargo} kg
-                </span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <X size={11} className="text-rose-400 flex-shrink-0" />
-                  <span className="text-[11px] text-rose-400 font-bold">
-                    Capacity exceeded by {overBy} kg — dispatch blocked
-                  </span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* ── Action buttons ── */}
-          <div className="flex items-center gap-2 pt-1">
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={handleDispatch}
-              disabled={!canDispatch}
-              className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded transition-all ${
-                canDispatch
-                  ? 'bg-sky-500 hover:bg-sky-400 text-white shadow-md shadow-sky-500/20 cursor-pointer'
-                  : 'bg-[#1a1a1a] text-slate-600 cursor-not-allowed border border-[#2a2a2a]'
-              }`}
-            >
-              {canDispatch ? <Zap size={13} /> : null}
-              {canDispatch ? 'Dispatch' : 'Dispatch (disabled)'}
-            </motion.button>
-            <button
-              onClick={handleCancel}
-              className="px-5 py-2.5 text-xs font-bold text-slate-400 hover:text-white border border-[#2a2a2a] hover:border-[#3a3a3a] rounded transition-all"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ══════════════ RIGHT: LIVE BOARD ══════════════ */}
-      <div className="flex-1 flex flex-col min-h-0 p-6 gap-5 overflow-y-auto">
-
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Live Board
-          </span>
-          <span className="text-[10px] text-slate-600 font-mono">
-            {trips.length} trip{trips.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-
-        {/* Trip cards */}
-        <div className="flex flex-col gap-3">
-          <AnimatePresence mode="popLayout">
-            {trips.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                isSelected={selectedTrip?.id === trip.id}
-                onSelect={(t) => setSelectedTrip((prev) => prev?.id === t.id ? null : t)}
-              />
-            ))}
-          </AnimatePresence>
-
-          {trips.length === 0 && (
-            <div className="text-center text-slate-700 text-xs py-12">
-              No trips yet. Dispatch your first trip →
-            </div>
-          )}
-        </div>
-
-        {/* Footer info note */}
-        <p className="text-[11px] text-slate-600 mt-auto pt-2">
-          On Complete: odometer → Fuel log → expenses → Vehicle &amp; Driver Available
+    <div className="flex-1 p-6 md:p-8 flex flex-col gap-6 min-h-screen text-left bg-slate-950 font-sans relative">
+      
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
+          <Zap size={20} className="text-primary-light" />
+          Dispatch & Smart Trips
+        </h1>
+        <p className="text-xs text-slate-500 max-w-xl mt-1">
+          Coordinate live dispatches, track active transits, assign drivers, and validate cargo loads.
         </p>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* ══════════════ LEFT: TRIP CREATOR ══════════════ */}
+        <div className="lg:col-span-5 bg-slate-900/35 border border-slate-850 p-6 rounded-2xl shadow-premium backdrop-blur-sm flex flex-col gap-5">
+          {/* Lifecycle stepper */}
+          <div className="flex flex-col gap-3">
+            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">
+              Trip Lifecycle status
+            </span>
+            <LifecycleStepper currentStep={lifecycleStep} />
+          </div>
+
+          <div className="h-px bg-slate-850" />
+
+          {/* Create Trip form */}
+          <div className="flex flex-col gap-4">
+            <span className="text-[10px] text-slate-450 font-extrabold uppercase tracking-wide">
+              Create Smart Trip
+            </span>
+
+            <Field label="Source Place">
+              <input
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                placeholder="Gandhinagar Depot"
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Destination Place">
+              <input
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                placeholder="Ahmedabad Hub"
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Vehicle (Available Only)">
+              <select
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className={selectCls}
+              >
+                <option value="" className="bg-slate-950">Select vehicle…</option>
+                {AVAILABLE_VEHICLES.map((v) => (
+                  <option key={v.id} value={v.id} className="bg-slate-950">{v.label}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Driver (Available Only)">
+              <select
+                value={driver}
+                onChange={(e) => setDriver(e.target.value)}
+                className={selectCls}
+              >
+                <option value="" className="bg-slate-950">Select driver…</option>
+                {AVAILABLE_DRIVERS.map((d) => (
+                  <option key={d} value={d} className="bg-slate-950">{d}</option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Cargo Weight (kg)">
+                <input
+                  type="number" min={0}
+                  value={cargoKg}
+                  onChange={(e) => setCargoKg(e.target.value)}
+                  placeholder="700"
+                  className={inputCls}
+                />
+              </Field>
+
+              <Field label="Planned Distance (km)">
+                <input
+                  type="number" min={0}
+                  value={distKm}
+                  onChange={(e) => setDistKm(e.target.value)}
+                  placeholder="35"
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+
+            {/* ── Capacity validation block ── */}
+            <AnimatePresence>
+              {overload && selectedVehicle && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="border border-rose-500/20 bg-rose-500/10 rounded-xl px-4 py-3 flex flex-col gap-1 text-left"
+                >
+                  <span className="text-[11px] text-rose-300/80 font-medium">
+                    Vehicle Capacity: {capKg >= 1000 ? `${capKg / 1000} Ton` : `${capKg} kg`}
+                  </span>
+                  <span className="text-[11px] text-rose-300/80 font-medium">
+                    Cargo Weight: {cargo} kg
+                  </span>
+                  <div className="flex items-center gap-1.5 mt-1 border-t border-rose-500/10 pt-1">
+                    <X size={11} className="text-rose-450 flex-shrink-0" />
+                    <span className="text-[11px] text-rose-450 font-bold leading-none">
+                      Capacity exceeded by {overBy} kg — dispatch locked
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ── Action buttons ── */}
+            <div className="flex items-center gap-3 pt-3 border-t border-slate-850 mt-1">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleDispatch}
+                disabled={!canDispatch}
+                className={`flex-1 flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer ${
+                  canDispatch
+                    ? 'bg-primary hover:bg-primary-light text-white shadow-md shadow-primary/10'
+                    : 'bg-slate-900/50 text-slate-650 cursor-not-allowed border border-slate-855'
+                }`}
+              >
+                {canDispatch ? <Zap size={13} className="fill-white text-white" /> : null}
+                {canDispatch ? 'Dispatch Trip' : 'Dispatch'}
+              </motion.button>
+              <button
+                onClick={handleCancel}
+                className="px-5 py-2.5 text-xs font-bold text-slate-400 hover:text-white border border-slate-800 hover:bg-slate-850 rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ══════════════ RIGHT: LIVE BOARD ══════════════ */}
+        <div className="lg:col-span-7 bg-slate-900/35 border border-slate-850 p-6 rounded-2xl shadow-premium backdrop-blur-sm flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wide">
+              Live Board Registry
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono font-bold uppercase tracking-wider select-none bg-slate-950/50 border border-slate-900 px-2 py-0.5 rounded-md">
+              {trips.length} active {trips.length !== 1 ? 'trips' : 'trip'}
+            </span>
+          </div>
+
+          {/* Trip cards */}
+          <div className="flex flex-col gap-3">
+            <AnimatePresence mode="popLayout">
+              {trips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  isSelected={selectedTrip?.id === trip.id}
+                  onSelect={(t) => setSelectedTrip((prev) => prev?.id === t.id ? null : t)}
+                />
+              ))}
+            </AnimatePresence>
+
+            {trips.length === 0 && (
+              <div className="text-center text-slate-500 text-xs py-16 bg-slate-950/20 border border-dashed border-slate-850 rounded-2xl">
+                No active smart trips recorded. Dispatch your first trip.
+              </div>
+            )}
+          </div>
+
+          {/* Footer info note */}
+          <div className="flex items-center gap-2 bg-slate-900/20 border border-slate-850/50 p-4 rounded-xl mt-auto">
+            <AlertCircle size={14} className="text-slate-550 flex-shrink-0" />
+            <p className="text-[11px] text-slate-500 leading-normal font-sans">
+              Rule Info: On dispatch completion, odometer reports automatically route to Fuel Logs and Expenses before returning the Vehicle & Driver to available states.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
