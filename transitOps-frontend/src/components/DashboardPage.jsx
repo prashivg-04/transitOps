@@ -52,7 +52,7 @@ export default function DashboardPage() {
   };
 
   // Get trips from API or use empty array
-  const allTrips = tripsData?.data?.items || [];
+  const allTrips = tripsData?.data || [];
 
   // Map API trip status to display status
   const mapTripStatus = (trip) => {

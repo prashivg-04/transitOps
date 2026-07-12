@@ -173,8 +173,8 @@ export default function TripsPage() {
 
   // Convert API trips to display format
   useEffect(() => {
-    if (tripsData?.data?.items) {
-      const mapped = tripsData.data.items.map(t => ({
+    if (tripsData?.data && Array.isArray(tripsData.data)) {
+      const mapped = tripsData.data.map(t => ({
         id: t.id.toString(),
         source: t.origin,
         destination: t.destination,
@@ -190,8 +190,8 @@ export default function TripsPage() {
 
   // Available vehicles for dispatch
   const availableVehicles = useMemo(() => {
-    if (!availableVehiclesData?.data?.items) return [];
-    return availableVehiclesData.data.items.map(v => ({
+    if (!availableVehiclesData?.data || !Array.isArray(availableVehiclesData.data)) return [];
+    return availableVehiclesData.data.map(v => ({
       id: v.id,
       name: v.license_plate,
       capacityKg: v.capacity || 0,
@@ -201,8 +201,8 @@ export default function TripsPage() {
 
   // Available drivers for dispatch
   const availableDrivers = useMemo(() => {
-    if (!availableDriversData?.data?.items) return [];
-    return availableDriversData.data.items.map(d => d.name);
+    if (!availableDriversData?.data || !Array.isArray(availableDriversData.data)) return [];
+    return availableDriversData.data.map(d => d.name || d.id);
   }, [availableDriversData]);
 
   // Form state
