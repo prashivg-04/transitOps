@@ -13,7 +13,7 @@ read_role = RoleChecker([UserRole.FLEET_MANAGER, UserRole.DISPATCHER, UserRole.S
 
 
 @router.get("", response_model=SuccessResponse[Dict[str, Any]], summary="Get Dashboard Stats", description="Retrieve real-time fleet, driver, and trip KPIs.")
-def get_dashboard(db: Session = Depends(read_role), current_user: User = Depends(read_role)):
+def get_dashboard(db: Session = Depends(get_db), current_user: User = Depends(read_role)):
     """
     Returns aggregated dashboard statistics including:
     - Active / Available / In Shop / Retired Vehicles
