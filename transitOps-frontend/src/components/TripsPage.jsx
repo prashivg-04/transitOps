@@ -290,7 +290,7 @@ export default function TripsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 flex-1 h-auto relative z-10 w-full">
         
         {/* ══════════════ LEFT: TRIP CREATOR ══════════════ */}
         <div className="lg:col-span-5 bg-slate-900/35 border border-slate-850 p-6 rounded-2xl shadow-premium backdrop-blur-sm flex flex-col gap-5">
@@ -354,7 +354,7 @@ export default function TripsPage() {
               </select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Cargo Weight (kg)">
                 <input
                   type="number" min={0}

@@ -115,7 +115,7 @@ function LogFuelModal({ onClose, onAdd }) {
   return (
     <Modal title="Log Fuel" icon={Fuel} accentColor="#3b82f6" onClose={onClose}>
       <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Vehicle" className="col-span-2">
             <select value={vehicle} onChange={(e) => setVehicle(e.target.value)} className={selectCls}>
               <option value="" className="bg-slate-950">Select vehicle…</option>
@@ -194,7 +194,7 @@ function AddExpenseModal({ onClose, onAdd }) {
   return (
     <Modal title="Add Expense" icon={ReceiptText} accentColor="#3b82f6" onClose={onClose}>
       <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Trip ID">
             <input value={trip} onChange={(e) => setTrip(e.target.value)} placeholder="TR009" className={inputCls} />
           </Field>

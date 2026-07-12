@@ -317,10 +317,10 @@ export default function DashboardPage() {
       </div>
 
       {/* DUAL WIDGET SECTION GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 h-auto flex-1 w-full relative">
         
-        {/* LEFT COLUMN: LIST TABLE (8/12 layout) */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
+        {/* LEFT MAIN AREA */}
+        <div className="col-span-1 lg:col-span-8 flex flex-col gap-8 h-full min-h-[400px]">
           <div className="flex justify-between items-center select-none">
             <h3 className="text-sm font-extrabold text-slate-200 tracking-wide uppercase">Recent Trips</h3>
             <span className="text-[10px] text-slate-500 font-mono uppercase bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
@@ -391,8 +391,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: VEHICLE STATUS PILL CHART (4/12 layout) */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
+        {/* RIGHT SIDEBAR / ALERTS (Fixed / Sticky style content) */}
+        <div className="col-span-1 lg:col-span-4 flex flex-col gap-6 h-full border-t lg:border-t-0 lg:border-l border-slate-900/60 pt-6 lg:pt-0 pl-0 lg:pl-8">
           <h3 className="text-sm font-extrabold text-slate-200 tracking-wide uppercase select-none">Vehicle Status</h3>
           
           <div className="w-full bg-slate-900/20 border border-slate-850 p-6 rounded-2xl shadow-premium flex flex-col gap-5 backdrop-blur-sm">

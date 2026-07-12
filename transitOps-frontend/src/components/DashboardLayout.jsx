@@ -4,16 +4,29 @@ import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Truck, Users, Route, Wrench, DollarSign, 
   BarChart3, Settings, ChevronLeft, ChevronRight, Search, 
-  Bell, LogOut, Activity
+  Bell, LogOut, Activity, Menu, X
 } from 'lucide-react';
 import { canAccess, getAccess } from '../rbac';
 import { getStoredUser } from '../hooks/useAuth';
 
 export default function DashboardLayout({ onLogout }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location.pathname]);
 
   // Read logged-in user from localStorage (set by useLogin onSuccess)
   const currentUser = useMemo(() => getStoredUser(), []);
@@ -50,11 +63,23 @@ export default function DashboardLayout({ onLogout }) {
       <div className="absolute top-[5%] left-[-150px] w-[500px] h-[500px] rounded-full bg-primary/5 filter blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[5%] right-[-150px] w-[600px] h-[600px] rounded-full bg-blue-500/5 filter blur-[150px] pointer-events-none" />
 
+      {/* MOBILE OVERLAY */}
+      {isMobile && isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] transition-opacity"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
       {/* FIXED SIDEBAR */}
       <motion.aside
-        animate={{ width: isCollapsed ? 76 : 256 }}
+        initial={false}
+        animate={{ 
+          width: isMobile ? 256 : (isCollapsed ? 76 : 256),
+          x: isMobile ? (isMobileOpen ? 0 : -256) : 0
+        }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="fixed top-0 left-0 h-screen bg-slate-900/60 backdrop-blur-md border-r border-slate-800/80 flex flex-col justify-between z-50 select-none"
+        className="fixed top-0 left-0 h-screen bg-slate-900/90 md:bg-slate-900/60 backdrop-blur-md border-r border-slate-800/80 flex flex-col justify-between z-[60] select-none shadow-2xl md:shadow-none"
       >
         
         {/* Top Logo and Title */}
@@ -64,7 +89,7 @@ export default function DashboardLayout({ onLogout }) {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white shadow-md shadow-primary/20 flex-shrink-0 transition-transform group-hover:scale-105">
                 <Activity size={16} className="stroke-[2.5]" />
               </div>
-              {!isCollapsed && (
+              {(!isCollapsed || isMobile) && (
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -112,7 +137,7 @@ export default function DashboardLayout({ onLogout }) {
                     isActive ? 'text-primary scale-105 filter drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'group-hover:scale-105'
                   }`} />
                   
-                  {!isCollapsed && (
+                  {(!isCollapsed || isMobile) && (
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -138,11 +163,12 @@ export default function DashboardLayout({ onLogout }) {
         {/* Bottom actions (Collapse and Exit) */}
         <div className="p-3 flex flex-col gap-1 border-t border-slate-850 bg-slate-900/20">
           
-          {/* Collapse sidebar switch toggler */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900/40 transition-all select-none group w-full text-left"
-          >
+          {/* Collapse sidebar switch toggler (hidden on mobile) */}
+          {!isMobile && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900/40 transition-all select-none group w-full text-left"
+            >
             {isCollapsed ? (
               <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-0.5 transition-transform" />
             ) : (
@@ -152,6 +178,7 @@ export default function DashboardLayout({ onLogout }) {
               </>
             )}
           </button>
+          )}
 
           {/* Exit/Log out button */}
           <button
@@ -159,8 +186,8 @@ export default function DashboardLayout({ onLogout }) {
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/5 transition-all select-none group w-full text-left"
           >
             <LogOut size={16} className="text-rose-500/80 group-hover:-translate-x-0.5 transition-transform" />
-            {!isCollapsed && <span>Exit Console</span>}
-            {isCollapsed && (
+            {(!isCollapsed || isMobile) && <span>Exit Console</span>}
+            {isCollapsed && !isMobile && (
               <div className="absolute left-[78px] bg-rose-950 border border-rose-900/40 text-[10px] font-bold text-rose-300 uppercase tracking-wider py-1.5 px-3 rounded-lg shadow-xl cursor-default transition-all duration-200 z-50 whitespace-nowrap">
                 Exit Console
               </div>
@@ -175,18 +202,28 @@ export default function DashboardLayout({ onLogout }) {
         
         {/* Dynamic Margin-left overlay spacer depending on collapsed state */}
         <motion.div
-          animate={{ paddingLeft: isCollapsed ? 76 : 256 }}
+          animate={{ paddingLeft: isMobile ? 0 : (isCollapsed ? 76 : 256) }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="flex-1 flex flex-col"
+          className="flex-1 flex flex-col w-full"
         >
           
           {/* TOP NAVBAR HEADER */}
-          <header className="h-16 bg-slate-950/60 backdrop-blur-md border-b border-slate-900/50 flex justify-between items-center px-6 sticky top-0 z-40 select-none">
+          <header className="h-16 bg-slate-950/60 backdrop-blur-md border-b border-slate-900/50 flex justify-between items-center px-4 md:px-6 sticky top-0 z-40 select-none">
             
-            {/* Left Header Title mapping */}
-            <h2 className="text-md font-bold text-slate-100 tracking-tight">
-              {getHeaderTitle()}
-            </h2>
+            <div className="flex items-center gap-3">
+              {isMobile && (
+                <button 
+                  onClick={() => setIsMobileOpen(true)}
+                  className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                >
+                  <Menu size={18} />
+                </button>
+              )}
+              {/* Left Header Title mapping */}
+              <h2 className="text-md font-bold text-slate-100 tracking-tight">
+                {getHeaderTitle()}
+              </h2>
+            </div>
 
             {/* Middle Search Input bar */}
             <div className="hidden md:flex relative max-w-sm w-full mx-8">
