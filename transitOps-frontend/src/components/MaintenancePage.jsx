@@ -420,7 +420,7 @@ export default function MaintenancePage() {
               <div className="flex items-start gap-3 border-b border-slate-900 pb-2.5">
                 <span className="inline-block mt-0.5 bg-amber-500/10 text-amber-400 p-0.8 rounded">🛠️</span>
                 <div>
-                  <strong className="text-slate-350 font-bold block mb-0.2">Auto Shop Assignment</strong>
+                  <strong className="text-slate-300 font-bold block mb-0.2">Auto Shop Assignment</strong>
                   Switching a driver/vehicle record to <span className="text-amber-500 font-bold">Active (In Shop)</span> maintenance shifts the asset state immediately, dropping it from availability pools.
                 </div>
               </div>
@@ -428,7 +428,7 @@ export default function MaintenancePage() {
               <div className="flex items-start gap-3 border-b border-slate-900 pb-2.5">
                 <span className="inline-block mt-0.5 bg-rose-500/10 text-rose-400 p-0.8 rounded">🚫</span>
                 <div>
-                  <strong className="text-slate-355 font-bold block mb-0.2">Dispatch lockout regulations</strong>
+                  <strong className="text-slate-300 font-bold block mb-0.2">Dispatch lockout regulations</strong>
                   Vehicles undergoing maintenance cannot be assigned to active client routes until technicians submit full structural checklists.
                 </div>
               </div>
@@ -535,7 +535,7 @@ export default function MaintenancePage() {
                         <motion.tr
                           layout
                           key={r.id}
-                          className="hover:bg-slate-900/20 text-slate-350 font-medium transition-colors"
+                          className="hover:bg-slate-900/20 text-slate-300 font-medium transition-colors"
                         >
                           <td className="px-4 py-3.5 font-bold text-white font-mono text-[10px]">
                             {r.vehicle}
@@ -609,11 +609,11 @@ export default function MaintenancePage() {
                       <div className="grid grid-cols-2 gap-3 bg-slate-950/40 p-2.5 rounded-xl border border-slate-900 text-[10px] font-mono">
                         <div>
                           <span className="text-slate-500 text-[8px] uppercase block font-bold">Cost</span>
-                          <span className="text-slate-350 mt-0.5 block">${r.cost}</span>
+                          <span className="text-slate-300 mt-0.5 block">${r.cost}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 text-[8px] uppercase block font-bold">Technician</span>
-                          <span className="text-slate-350 mt-0.5 block">{r.technician}</span>
+                          <span className="text-slate-300 mt-0.5 block">{r.technician}</span>
                         </div>
                         <div className="col-span-2">
                           <span className="text-slate-500 text-[8px] uppercase block font-bold">Date</span>
@@ -760,7 +760,7 @@ export default function MaintenancePage() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Service description</label>
-                  <p className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 text-[10px] text-slate-350 leading-relaxed font-sans min-h-[50px]">
+                  <p className="bg-slate-950 p-2.5 rounded-xl border border-slate-900 text-[10px] text-slate-300 leading-relaxed font-sans min-h-[50px]">
                     {selectedRecord.description}
                   </p>
                 </div>

@@ -125,7 +125,7 @@ export default function Auth({ initialView = 'login', onBack, onSuccess }) {
         {/* Center ROLES PANEL */}
         <div className="my-10 md:my-0 flex flex-col gap-5 text-left">
           <div>
-            <h2 className="text-secondary-100 text-sm font-semibold tracking-wide text-slate-350 uppercase">One login, four roles:</h2>
+            <h2 className="text-secondary-100 text-sm font-semibold tracking-wide text-slate-400 uppercase">One login, four roles:</h2>
             <p className="text-[11px] text-slate-500 mt-1">Automatic workspace configuration based on role assignments.</p>
           </div>
 

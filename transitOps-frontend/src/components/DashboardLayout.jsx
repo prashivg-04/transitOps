@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, Truck, Users, Route, Wrench, DollarSign, 
   BarChart3, Settings, ChevronLeft, ChevronRight, Search, 
-  Bell, LogOut, Activity 
+  Bell, LogOut, Activity
 } from 'lucide-react';
 
 export default function DashboardLayout({ onLogout }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   const location = useLocation();
 
   // Sidebar Path Mappings
@@ -199,8 +200,12 @@ export default function DashboardLayout({ onLogout }) {
               {/* Separation border divider */}
               <div className="w-[1px] h-6 bg-slate-850" />
 
-              {/* Dispatcher Details Avatar */}
-              <div className="flex items-center gap-2.5">
+              {/* Profile Avatar — navigates directly to /profile */}
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2.5 hover:opacity-85 transition-all outline-none focus:ring-1 focus:ring-primary/40 rounded-xl p-1 text-left"
+                title="Go to Profile"
+              >
                 <div className="flex flex-col text-right hidden sm:flex">
                   <span className="text-xs font-bold text-slate-100 leading-tight">Raven K.</span>
                   <span className="text-[9px] text-primary/80 font-bold bg-primary/10 border border-primary/20 rounded px-1.5 py-0.2 w-fit ml-auto uppercase font-mono tracking-wide">
@@ -210,7 +215,7 @@ export default function DashboardLayout({ onLogout }) {
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white font-extrabold text-[10px] flex items-center justify-center border border-primary/30 shadow-md shadow-primary/10 select-none">
                   RK
                 </div>
-              </div>
+              </button>
 
             </div>
 

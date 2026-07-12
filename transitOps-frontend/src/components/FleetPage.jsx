@@ -350,7 +350,7 @@ export default function FleetPage() {
                           ₹{fmt(v.avgCost)}
                         </td>
                         <td className="px-5 py-4">
-                          <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-lg ${STATUS_STYLES[v.status] ?? 'bg-slate-700/40 text-slate-350 border border-slate-650'}`}>
+                          <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-lg ${STATUS_STYLES[v.status] ?? 'bg-slate-700/40 text-slate-300 border border-slate-600'}`}>
                             {v.status}
                           </span>
                         </td>

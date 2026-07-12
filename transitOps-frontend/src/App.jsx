@@ -20,6 +20,7 @@ import TripsPage from './components/TripsPage';
 import AnalyticsPage from './components/AnalyticsPage';
 import FuelExpensesPage from './components/FuelExpensesPage';
 import SettingsPage from './components/SettingsPage';
+import ProfilePage from './components/ProfilePage';
 
 function LandingView({ onNavigate }) {
   return (
@@ -97,6 +98,7 @@ function AppRoutes() {
   <Route path="/fuel-expenses" element={<FuelExpensesPage />} />
   <Route path="/analytics" element={<AnalyticsPage />} />
   <Route path="/settings" element={<SettingsPage />} />
+  <Route path="/profile" element={<ProfilePage />} />
 </Route>
 
       {/* Fallback unknown paths */}

@@ -142,7 +142,7 @@ function TripCard({ trip, onSelect, isSelected }) {
             {trip.destination}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-lg ${BADGE_STYLES[trip.status] ?? 'bg-slate-700/40 text-slate-350 border border-slate-650'}`}>
+            <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 rounded-lg ${BADGE_STYLES[trip.status] ?? 'bg-slate-700/40 text-slate-300 border border-slate-600'}`}>
               {trip.status}
             </span>
           </div>

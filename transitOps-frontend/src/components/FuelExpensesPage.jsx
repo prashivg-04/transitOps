@@ -291,7 +291,7 @@ export default function FuelExpensesPage() {
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowExp(true)}
-              className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-350 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
               + Add Expense
             </motion.button>
@@ -385,7 +385,7 @@ export default function FuelExpensesPage() {
                           <td className="px-5 py-4 text-slate-400 font-mono">₹{fmt(row.other)}</td>
                           <td className="px-5 py-4 text-slate-400 font-mono">{row.maint ? `₹${fmt(row.maint)}` : '₹0'}</td>
                           <td className="px-5 py-4">
-                            <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-lg ${STATUS_STYLES[row.status] ?? 'bg-slate-700/40 text-slate-350 border border-slate-650'}`}>
+                            <span className={`inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-lg ${STATUS_STYLES[row.status] ?? 'bg-slate-700/40 text-slate-300 border border-slate-600'}`}>
                               {row.status}
                             </span>
                           </td>
