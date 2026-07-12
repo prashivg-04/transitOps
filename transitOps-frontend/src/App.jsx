@@ -15,8 +15,11 @@ import DashboardLayout from './components/DashboardLayout';
 import DashboardPage from './components/DashboardPage';
 import DriversPage from './components/DriversPage';
 import MaintenancePage from './components/MaintenancePage';
-import PlaceholderPage from './components/PlaceholderPage';
-import { Truck, Users, Route as RouteIcon, Wrench, DollarSign, BarChart3, Settings } from 'lucide-react';
+import FleetPage from './components/FleetPage';
+import TripsPage from './components/TripsPage';
+import AnalyticsPage from './components/AnalyticsPage';
+import FuelExpensesPage from './components/FuelExpensesPage';
+import SettingsPage from './components/SettingsPage';
 
 function LandingView({ onNavigate }) {
   return (
@@ -84,61 +87,17 @@ function AppRoutes() {
       />
 
       {/* Dashboard Subrouter Outlet Layout */}
-      <Route element={<DashboardLayout onLogout={() => navigate('/')} />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route 
-          path="/fleet" 
-          element={
-            <PlaceholderPage 
-              title="Fleet Registry" 
-              description="Manage active fleet vehicles, specification catalogs, live hardware tracking markers and registration compliance diaries." 
-              icon={Truck} 
-            />
-          } 
-        />
-        <Route path="/drivers" element={<DriversPage />} />
-        <Route 
-          path="trips" 
-          element={
-            <PlaceholderPage 
-              title="Dispatch & Smart Trips" 
-              description="Coordinate live load dispatches, calculate automated green routing paths, check ETA logs and customer receipt statuses." 
-              icon={RouteIcon} 
-            />
-          } 
-        />
-        <Route path="/maintenance" element={<MaintenancePage />} />
-        <Route 
-          path="/fuel-expenses" 
-          element={
-            <PlaceholderPage 
-              title="Fuel & Fleet Expenses" 
-              description="Audit fleet spending statistics, check instant fuel card registers, evaluate engine run-times and tax logs." 
-              icon={DollarSign} 
-            />
-          } 
-        />
-        <Route 
-          path="/analytics" 
-          element={
-            <PlaceholderPage 
-              title="Operations Intelligence" 
-              description="Compile customized intelligence reports, look at fuel efficiency charts, dispatch speeds and idle stats." 
-              icon={BarChart3} 
-            />
-          } 
-        />
-        <Route 
-          path="/settings" 
-          element={
-            <PlaceholderPage 
-              title="Workspace Settings" 
-              description="Configure account configurations, adjust RBAC permissions, integrate developer API tokens and configure alerts." 
-              icon={Settings} 
-            />
-          } 
-        />
-      </Route>
+      
+<Route element={<DashboardLayout onLogout={() => navigate('/')} />}>
+  <Route path="/dashboard" element={<DashboardPage />} />
+  <Route path="/fleet" element={<FleetPage />} />
+  <Route path="/drivers" element={<DriversPage />} />
+  <Route path="/trips" element={<TripsPage />} />
+  <Route path="/maintenance" element={<MaintenancePage />} />
+  <Route path="/fuel-expenses" element={<FuelExpensesPage />} />
+  <Route path="/analytics" element={<AnalyticsPage />} />
+  <Route path="/settings" element={<SettingsPage />} />
+</Route>
 
       {/* Fallback unknown paths */}
       <Route path="*" element={<Navigate to="/" replace />} />
